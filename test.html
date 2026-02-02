@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CKEditor 5 Full Featured Editor</title>
+    
+    <!-- Latest CKEditor 5 CSS -->
+    <link rel="stylesheet" href="https://cdn.ckeditor.com/ckeditor5/47.4.0/ckeditor5.css" />
+    
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    
+    <!-- CKEditor 5 Classic build (pre-built with all features) -->
+    <script src="https://cdn.ckeditor.com/ckeditor5/47.4.0/classic/ckeditor.js"></script>
+    
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 30px;
+            margin-top: 20px;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        
+        .actions {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background: #2c80ff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        button:hover {
+            background: #1a6fe0;
+        }
+        
+        button.secondary {
+            background: #6c757d;
+        }
+        
+        button.secondary:hover {
+            background: #5a6268;
+        }
+        
+        .output {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .output h3 {
+            margin-top: 0;
+            color: #495057;
+        }
+        
+        #contentOutput {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            background: white;
+            padding: 15px;
+            border-radius: 4px;
+            border: 1px solid #ced4da;
+            min-height: 100px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>CKEditor 5 Full Featured Editor</h1>
+        
+        <!-- Editor Container -->
+        <div id="editor">
+            <h2>Welcome to CKEditor 5!</h2>
+            <p>This is a full-featured editor with all essential tools enabled.</p>
+            <p>You can <strong>format text</strong>, <em>add images</em>, create <u>tables</u>, and much more!</p>
+            <ul>
+                <li>Bulleted lists</li>
+                <li>Easy formatting</li>
+                <li>Media embedding</li>
+            </ul>
+            <ol>
+                <li>Numbered lists</li>
+                <li>Structured content</li>
+                <li>Professional editing</li>
+            </ol>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="actions">
+            <button id="getContent">Get Editor Content</button>
+            <button id="setContent" class="secondary">Load Sample Content</button>
+            <button id="clearContent" class="secondary">Clear Editor</button>
+            <button id="printData">Print Data to Console</button>
+        </div>
+        
+        <!-- Output Area -->
+        <div class="output">
+            <h3>Editor Content Output:</h3>
+            <div id="contentOutput">Content will appear here...</div>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(() => {
+            let editor;
+            
+            // Initialize CKEditor 5
+            ClassicEditor
+                .create(document.querySelector('#editor'), {
+                    // CKEditor configuration
+                    toolbar: {
+                        items: [
+                            'undo', 'redo', '|',
+                            'heading', '|',
+                            'bold', 'italic', 'underline', 'strikethrough', 'subscript', 'superscript', '|',
+                            'fontSize', 'fontFamily', 'fontColor', 'fontBackgroundColor', '|',
+                            'alignment', '|',
+                            'bulletedList', 'numberedList', 'todoList', '|',
+                            'outdent', 'indent', '|',
+                            'link', 'imageUpload', 'mediaEmbed', 'insertTable', 'blockQuote', 'codeBlock', '|',
+                            'specialCharacters', 'horizontalLine', 'pageBreak', '|',
+                            'findAndReplace', 'selectAll', '|',
+                            'sourceEditing'
+                        ],
+                        shouldNotGroupWhenFull: true
+                    },
+                    
+                    // Plugin configuration
+                    plugins: [
+                        // Essentials
+                        'Essentials',
+                        
+                        // Formatting
+                        'Bold',
+                        'Italic',
+                        'Underline',
+                        'Strikethrough',
+                        'Subscript',
+                        'Superscript',
+                        
+                        // Headings
+                        'Heading',
+                        
+                        // Font
+                        'FontSize',
+                        'FontFamily',
+                        'FontColor',
+                        'FontBackgroundColor',
+                        
+                        // Alignment
+                        'Alignment',
+                        
+                        // Lists
+                        'List',
+                        'TodoList',
+                        
+                        // Indentation
+                        'Indent',
+                        'IndentBlock',
+                        
+                        // Links & Media
+                        'Link',
+                        'Image',
+                        'ImageUpload',
+                        'ImageResize',
+                        'ImageStyle',
+                        'ImageToolbar',
+                        'ImageCaption',
+                        'MediaEmbed',
+                        
+                        // Tables
+                        'Table',
+                        'TableToolbar',
+                        'TableColumnResize',
+                        'TableCellProperties',
+                        'TableProperties',
+                        
+                        // Blocks
+                        'BlockQuote',
+                        'CodeBlock',
+                        
+                        // Special
+                        'SpecialCharacters',
+                        'HorizontalLine',
+                        'PageBreak',
+                        
+                        // Tools
+                        'FindAndReplace',
+                        'SelectAll',
+                        
+                        // Source editing
+                        'SourceEditing',
+                        
+                        // Autoformat
+                        'Autoformat',
+                        
+                        // Autolink
+                        'AutoLink',
+                        
+                        // Paste
+                        'PasteFromOffice'
+                    ],
+                    
+                    // Image upload configuration
+                    image: {
+                        toolbar: [
+                            'imageTextAlternative',
+                            'toggleImageCaption',
+                            'imageStyle:inline',
+                            'imageStyle:block',
+                            'imageStyle:side',
+                            'linkImage'
+                        ],
+                        upload: {
+                            types: ['jpeg', 'png', 'gif', 'bmp', 'webp', 'svg']
+                        }
+                    },
+                    
+                    // Table configuration
+                    table: {
+                        contentToolbar: [
+                            'tableColumn',
+                            'tableRow',
+                            'mergeTableCells',
+                            'tableCellProperties',
+                            'tableProperties'
+                        ]
+                    },
+                    
+                    // Heading configuration
+                    heading: {
+                        options: [
+                            { model: 'paragraph', title: 'Paragraph', class: 'ck-heading_paragraph' },
+                            { model: 'heading1', view: 'h1', title: 'Heading 1', class: 'ck-heading_heading1' },
+                            { model: 'heading2', view: 'h2', title: 'Heading 2', class: 'ck-heading_heading2' },
+                            { model: 'heading3', view: 'h3', title: 'Heading 3', class: 'ck-heading_heading3' },
+                            { model: 'heading4', view: 'h4', title: 'Heading 4', class: 'ck-heading_heading4' }
+                        ]
+                    },
+                    
+                    // Font family configuration
+                    fontFamily: {
+                        options: [
+                            'default',
+                            'Arial, Helvetica, sans-serif',
+                            'Courier New, Courier, monospace',
+                            'Georgia, serif',
+                            'Lucida Sans Unicode, Lucida Grande, sans-serif',
+                            'Tahoma, Geneva, sans-serif',
+                            'Times New Roman, Times, serif',
+                            'Trebuchet MS, Helvetica, sans-serif',
+                            'Verdana, Geneva, sans-serif'
+                        ]
+                    },
+                    
+                    // Font size configuration
+                    fontSize: {
+                        options: [
+                            9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+                            22, 24, 26, 28, 30, 32, 34, 36, 48, 60, 72
+                        ]
+                    },
+                    
+                    // Language
+                    language: 'en',
+                    
+                    // Placeholder
+                    placeholder: 'Start typing your content here...',
+                    
+                    // License key (replace with your own if you have one)
+                    // licenseKey: 'your-license-key-here'
+                })
+                .then(newEditor => {
+                    editor = newEditor;
+                    console.log('CKEditor 5 initialized successfully!');
+                    
+                    // Store editor instance globally for debugging
+                    window.editor = editor;
+                })
+                .catch(error => {
+                    console.error('Error initializing CKEditor 5:', error);
+                });
+            
+            // Get Editor Content
+            $('#getContent').on('click', () => {
+                if (editor) {
+                    const content = editor.getData();
+                    $('#contentOutput').text(content);
+                    alert('Content retrieved successfully! Check the output section below.');
+                }
+            });
+            
+            // Set Sample Content
+            $('#setContent').on('click', () => {
+                if (editor) {
+                    const sampleContent = `
+                        <h2>Sample Article Content</h2>
+                        
+                        <p>This is a <strong>sample article</strong> demonstrating CKEditor 5's capabilities. You can edit this content using all the available tools in the toolbar.</p>
+                        
+                        <h3>Key Features:</h3>
+                        
+                        <ul>
+                            <li><strong>Rich Text Formatting:</strong> Bold, italic, underline, and more</li>
+                            <li><strong>Multiple Headings:</strong> H1 through H4 for proper structure</li>
+                            <li><strong>Lists:</strong> Both bulleted and numbered lists</li>
+                            <li><strong>Media Support:</strong> Images and embedded content</li>
+                            <li><strong>Tables:</strong> Create and edit tables easily</li>
+                            <li><strong>Code Blocks:</strong> Perfect for technical content</li>
+                        </ul>
+                        
+                        <h3>Example Table:</h3>
+                        
+                        <table style="width:100%; border-collapse: collapse;">
+                            <thead>
+                                <tr>
+                                    <th style="border: 1px solid #ddd; padding: 8px;">Feature</th>
+                                    <th style="border: 1px solid #ddd; padding: 8px;">Description</th>
+                                    <th style="border: 1px solid #ddd; padding: 8px;">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td style="border: 1px solid #ddd; padding: 8px;">Image Upload</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px;">Upload and resize images</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px;">✅ Enabled</td>
+                                </tr>
+                                <tr>
+                                    <td style="border: 1px solid #ddd; padding: 8px;">Table Editing</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px;">Create and modify tables</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px;">✅ Enabled</td>
+                                </tr>
+                                <tr>
+                                    <td style="border: 1px solid #ddd; padding: 8px;">Source Code</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px;">Edit HTML source directly</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px;">✅ Enabled</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        
+                        <blockquote>
+                            <p>This is a blockquote. Perfect for highlighting important quotes or statements.</p>
+                        </blockquote>
+                        
+                        <p>Try editing this content using the toolbar above!</p>
+                    `;
+                    
+                    editor.setData(sampleContent);
+                    alert('Sample content loaded!');
+                }
+            });
+            
+            // Clear Editor Content
+            $('#clearContent').on('click', () => {
+                if (editor && confirm('Are you sure you want to clear the editor?')) {
+                    editor.setData('');
+                    $('#contentOutput').text('Content will appear here...');
+                }
+            });
+            
+            // Print Data to Console
+            $('#printData').on('click', () => {
+                if (editor) {
+                    const content = editor.getData();
+                    console.log('=== CKEditor 5 Content ===');
+                    console.log(content);
+                    console.log('=== End of Content ===');
+                    alert('Content printed to browser console (Press F12 to view)');
+                }
+            });
+            
+            // Handle Ctrl+S to save content
+            $(document).on('keydown', (e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                    e.preventDefault();
+                    if (editor) {
+                        const content = editor.getData();
+                        console.log('Content saved (Ctrl+S):', content);
+                        alert('Content saved! Check browser console for details.');
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

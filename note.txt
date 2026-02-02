@@ -1,0 +1,23 @@
+
+
+1. Staff List : Roles according filter add  :  DONE  
+2. Category list me image size issue : DONE 
+3. Same Sub Category : DONE 
+4. Order List Ui issue : Done 
+5. Transaction History Box value dynamic : Done 
+6. Same date select dashbod data not working properly  : Done 
+7. Price Change Setting Ui Update make profesnal : Done 
+8. If child permission give parent permission auto enable   : Done 
+10. User Details page dynaic  :  Done 
+12. Product IMage make simpeyfy : Done 
+3. Product Priceing  Product according :  Done 
+
+========================================
+
+
+1.  User Details make dynamic Query   :  Pending 
+2.  Dashbaord make dynamic Query      :  Pending         
+11. Notification Page  : 
+12. Discount Module  
+13. 
+
