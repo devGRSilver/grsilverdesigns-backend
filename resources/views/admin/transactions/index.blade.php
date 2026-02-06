@@ -515,7 +515,6 @@
                 $searchBtn.on('click', function() {
                     isFilterChange = true;
                     table.draw();
-                    loadStatistics();
                 });
 
                 // Reset button
@@ -538,7 +537,6 @@
 
                     setTimeout(function() {
                         table.draw();
-                        loadStatistics();
                         $this.prop('disabled', false).html(
                             '<i class="ri-refresh-line me-1"></i> Reset');
 
@@ -678,7 +676,6 @@
                                                 4000
                                             );
                                             table.draw();
-                                            loadStatistics();
                                         },
                                         error: function(xhr) {
                                             showAlert(
@@ -711,7 +708,6 @@
                     bindFilterEvents();
                     initTooltips();
                     initStatusHandlers();
-                    loadStatistics();
 
                     // Show welcome message on initial load
                     setTimeout(function() {

@@ -3821,7 +3821,7 @@ textarea:focus {
 .btn-sm {
   padding: 4px 8px !important;
   font-size: 12px !important;
-  border-radius: 3px !important;
+  /* border-radius: 3px !important; */
 }
 
 [dir=rtl] .btn-group > .btn-group:not(:first-child) > .btn,

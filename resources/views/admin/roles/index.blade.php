@@ -55,17 +55,20 @@
                                                 class="btn btn-outline-secondary px-4">
                                                 <i class="ri-refresh-line me-1"></i> Reset
                                             </button>
+
+                                            @can('roles.create')
+                                                <a id="resetFilterBtn" type="button" href="{{ route('roles.create') }}"
+                                                    class="btn btn-primary px-4">
+                                                    <i class="ri-add-line me-1"></i> Add Role
+                                                </a>
+                                            @endcan
+
+
+
                                         </div>
                                     </div>
 
-                                    <!-- Add Role Button -->
-                                    @can('roles.create')
-                                        <div class="col-lg-2 col-md-4">
-                                            <a href="{{ route('roles.create') }}" class="btn btn-primary w-100">
-                                                <i class="ri-add-line me-1"></i> Add Role
-                                            </a>
-                                        </div>
-                                    @endcan
+
 
                                 </div>
                             </div>
@@ -653,7 +656,7 @@
                 initDataTable();
                 bindFilterEvents();
                 initTooltips();
-                initDeleteHandlers();
+                // initDeleteHandlers();
                 initStatusHandlers();
 
                 // Show welcome message on initial load

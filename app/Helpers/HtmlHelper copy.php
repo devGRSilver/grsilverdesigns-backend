@@ -9,7 +9,7 @@ function button_group($buttons = [])
         return '';
     }
 
-    $html = '<div class="btn-group btn-group-md" role="group" aria-label="Action Buttons">';
+    $html = '<div class="btn-group" role="group" aria-label="Action Buttons">';
     foreach ($buttons as $btn) {
         $html .= $btn;
     }
@@ -25,7 +25,7 @@ function btn_view($url, $ajax = false)
     if ($ajax) {
         return '<button href="' . $escapedUrl . '" type="button" class="btn btn-success modal_open">View</button>';
     } else {
-        return '<a href=\'' . $escapedUrl . '\'" class="btn btn-success normal-call">View</a>';
+        return '<button onclick="window.location.href=\'' . $escapedUrl . '\'" type="button" class="btn btn-success normal-call">View</button>';
     }
 }
 
@@ -147,6 +147,8 @@ function view_order_status(OrderStatus|string $status): string
             OrderStatus::PENDING_PAYMENT->value =>
             '<span class="badge bg-label-warning">Pending Payment</span>',
 
+
+
             OrderStatus::PAYMENT_RECEIVED->value,
             OrderStatus::CONFIRMED->value =>
             '<span class="badge bg-label-success">Confirmed</span>',
@@ -171,6 +173,18 @@ function view_order_status(OrderStatus|string $status): string
 
             OrderStatus::CANCELLED->value =>
             '<span class="badge bg-label-danger">Cancelled</span>',
+
+            // OrderStatus::RETURN_REQUESTED->value =>
+            // '<span class="badge bg-label-warning">Return Requested</span>',
+
+            // OrderStatus::RETURN_APPROVED->value =>
+            // '<span class="badge bg-label-info">Return Approved</span>',
+
+            // OrderStatus::RETURNED->value =>
+            // '<span class="badge bg-label-primary">Returned</span>',
+
+            // OrderStatus::REFUNDED->value =>
+            // '<span class="badge bg-label-success">Refunded</span>',
 
             OrderStatus::FAILED->value =>
             '<span class="badge bg-label-danger">Payment Failed</span>',
@@ -202,7 +216,7 @@ function status_dropdown($selected = null, $data = [])
     $method = htmlspecialchars($data['method'] ?? 'PUT', ENT_QUOTES, 'UTF-8');
 
     return '
-        <select class="form-select form-select-sm change-status"
+        <select class="form-select change-status"
             data-id="' . $id . '"
             data-url="' . $url . '"
             data-method="' . $method . '">
@@ -222,7 +236,7 @@ function status_custom_dropdown($selected = null, $data = [])
     $level_two = htmlspecialchars($data['level_two'] ?? 'Inactive', ENT_QUOTES, 'UTF-8');
 
     return '
-        <select class="form-select form-select-sm change-status"
+        <select class="form-select change-status"
             data-id="' . $id . '"
             data-url="' . $url . '"
             data-method="' . $method . '">

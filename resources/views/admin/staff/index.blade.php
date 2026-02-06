@@ -504,7 +504,7 @@
                 initDataTable();
                 bindFilterEvents();
                 initTooltips();
-                initDeleteHandlers();
+                // initDeleteHandlers();
 
                 // Show welcome message on initial load
                 setTimeout(function() {

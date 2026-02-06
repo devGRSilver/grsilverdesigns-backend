@@ -581,7 +581,7 @@
                 initDataTable();
                 bindFilterEvents();
                 initTooltips();
-                initDeleteHandlers();
+                // initDeleteHandlers();
                 handleUrlParams();
 
                 // Show welcome message on initial load
