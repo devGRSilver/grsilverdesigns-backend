@@ -208,11 +208,11 @@
 
 
                 <!-- Transactions -->
-                @can('discount.view.any')
+                @can('coupons.view.any')
                     <li class="slide" role="none">
-                        <a href="{{ route('discount.index') }}"
-                            class="sidebar-menu-item {{ request()->routeIs('discount.*') ? 'active' : '' }}"
-                            role="menuitem" aria-current="{{ request()->routeIs('discount.*') ? 'page' : 'false' }}">
+                        <a href="{{ route('coupons.index') }}"
+                            class="sidebar-menu-item {{ request()->routeIs('coupons.*') ? 'active' : '' }}"
+                            role="menuitem" aria-current="{{ request()->routeIs('coupons.*') ? 'page' : 'false' }}">
                             <div class="side-menu-icon" aria-hidden="true">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
                                     width="24" height="24">

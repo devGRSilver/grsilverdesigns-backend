@@ -153,56 +153,114 @@ $(document).ready(function () {
         }
     });
 
-    /* ============================================================
-     * 3️⃣ AJAX MODAL OPEN
-     * ============================================================ */
-    $(document).on("click", ".modal_open", function (event) {
-        event.preventDefault();
 
-        const $btn = $(this);
-        const url = $btn.attr("href");
+
+    $(document).on("click", ".modal_open", function (e) {
+        e.preventDefault();
+
+        const url = this.getAttribute("href");
         const $modal = $("#app_gloval_modal");
         const $content = $modal.find(".modal_content");
 
-        if (!url) {
-            console.error("modal_open: URL missing");
-            return;
-        }
+        if (!url) return console.error("URL missing");
 
         $content.html(`
-            <div class="p-3 text-center">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Loading...</span>
-                </div>
-                <p class="mt-2 text-muted">Loading content...</p>
-            </div>
-        `);
+        <div class="text-center p-3">
+            <div class="spinner-border text-primary"></div>
+            <p class="mt-2 text-muted">Loading...</p>
+        </div>
+    `);
 
         $modal.modal("show");
 
-        $.ajax({
-            url: url,
-            type: "GET",
-            dataType: "html",
-            success: function (html) {
-                $content.html(html);
-            },
-            error: function (xhr) {
-                const errorHtml = `
-                    <div class="p-4">
-                        <div class="alert alert-danger">
-                            <h5 class="alert-heading mb-2">
-                                <i class="fas fa-exclamation-triangle me-2"></i>Failed to load content
-                            </h5>
-                            <p class="mb-2"><strong>Status:</strong> ${xhr.status} - ${xhr.statusText}</p>
-                            <hr>
-                            <pre class="bg-light p-3 border rounded" style="white-space:pre-wrap; max-height:300px; overflow:auto;">${escapeHtml(xhr.responseText)}</pre>
-                        </div>
-                    </div>`;
-                $content.html(errorHtml);
-            }
-        });
+        $.get(url)
+            .done((html, _, xhr) => {
+                if (
+                    xhr.status !== 200 ||
+                    /Exception|Error|Whoops/.test(html)
+                ) {
+                    renderError(xhr, html);
+                } else {
+                    $content.html(html);
+                }
+            })
+            .fail(xhr => renderError(xhr));
+
+        function renderError(xhr, html = null) {
+            const data =
+                html ||
+                xhr.responseText ||
+                JSON.stringify(xhr.responseJSON || {}, null, 2) ||
+                "No response";
+
+            $content.html(`
+            <div class="alert alert-danger m-3">
+                <strong>Error ${xhr.status || 500}</strong>
+                <pre class="mt-2 bg-light p-2 border rounded"
+                     style="max-height:300px; overflow:auto; white-space:pre-wrap;">
+${data.replace(/[&<>"']/g, m =>
+                ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m])
+            )}
+                </pre>
+            </div>
+        `);
+        }
     });
+
+
+
+
+
+    // /* ============================================================
+    //  * 3️⃣ AJAX MODAL OPEN
+    //  * ============================================================ */
+    // $(document).on("click", ".modal_open", function (event) {
+    //     event.preventDefault();
+
+    //     const $btn = $(this);
+    //     const url = $btn.attr("href");
+    //     const $modal = $("#app_gloval_modal");
+    //     const $content = $modal.find(".modal_content");
+
+    //     if (!url) {
+    //         console.error("modal_open: URL missing");
+    //         return;
+    //     }
+
+    //     $content.html(`
+    //         <div class="p-3 text-center">
+    //             <div class="spinner-border text-primary" role="status">
+    //                 <span class="visually-hidden">Loading...</span>
+    //             </div>
+    //             <p class="mt-2 text-muted">Loading content...</p>
+    //         </div>
+    //     `);
+
+    //     $modal.modal("show");
+
+    //     $.ajax({
+    //         url: url,
+    //         type: "GET",
+    //         dataType: "html",
+    //         success: function (html) {
+    //             $content.html(html);
+    //         },
+    //         error: function (xhr) {
+    //             const errorHtml = `
+    //                 <div class="p-4">
+    //                     <div class="alert alert-danger">
+    //                         <h5 class="alert-heading mb-2">
+    //                             <i class="fas fa-exclamation-triangle me-2"></i>Failed to load content
+    //                         </h5>
+    //                         <p class="mb-2"><strong>Status:</strong> ${xhr.status} - ${xhr.statusText}</p>
+    //                         <hr>
+    //                         <pre class="bg-light p-3 border rounded" style="white-space:pre-wrap; max-height:300px; overflow:auto;">${escapeHtml(xhr.responseText)}</pre>
+    //                     </div>
+    //                 </div>`;
+    //             $content.html(errorHtml);
+    //         }
+    //     });
+    // });
 
     /* ============================================================
      * 4️⃣ GLOBAL STATUS CHANGE WITH ROLLBACK

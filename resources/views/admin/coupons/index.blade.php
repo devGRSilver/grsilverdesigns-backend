@@ -8,13 +8,13 @@
                 <div class="row mb-3">
                     <div class="col-xl-12">
                         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                            <h1 class="fs-18 mb-0">{{ $title ?? 'Orders Management' }}</h1>
+                            <h1 class="fs-18 mb-0">{{ $title ?? 'Coupons Management' }}</h1>
                             <nav aria-label="breadcrumb">
                                 <ol class="breadcrumb breadcrumb-example1 mb-0">
                                     <li class="breadcrumb-item">
                                         <a href="{{ route('admin.dashboard') }}">Home</a>
                                     </li>
-                                    <li class="breadcrumb-item active">Orders</li>
+                                    <li class="breadcrumb-item active">Coupons</li>
                                 </ol>
                             </nav>
                         </div>
@@ -31,38 +31,57 @@
                             <div class="card-body p-3 p-md-4">
                                 <div class="row g-3 align-items-end">
 
-                                    <!-- Order Status Filter -->
-                                    @can('orders.view.any')
-                                        <div class="col-lg-3 col-md-6">
-                                            <label for="filterStatus" class="form-label fw-semibold mb-2">
-                                                <i class="ri-filter-line me-1"></i>Order Status
-                                            </label>
-                                            <select id="filterStatus" class="form-select" name="status">
-                                                <option value="">All Status</option>
-                                                <option value="pending_payment">Pending Payment</option>
-                                                <option value="payment_received">Payment Received</option>
-                                                <option value="confirmed">Confirmed</option>
-                                                <option value="processing">Processing</option>
-                                                <option value="packed">Packed</option>
-                                                <option value="shipped">Shipped</option>
-                                                <option value="in_transit">In Transit</option>
-                                                <option value="out_for_delivery">Out for Delivery</option>
-                                                <option value="delivered">Delivered</option>
-                                                <option value="cancel_requested">Cancel Requested</option>
-                                                <option value="cancelled">Cancelled</option>
-                                                <option value="failed">Failed</option>
-                                            </select>
-                                        </div>
-                                    @endcan
-
                                     <!-- Date Range Filter -->
-                                    @can('orders.view.any')
-                                        <div class="col-lg-3 col-md-6">
+                                    @can('coupons.view.any')
+                                        <div class="col-lg-2 col-md-6">
                                             <label for="rangeCalendar" class="form-label fw-semibold mb-2">
                                                 <i class="ri-calendar-line me-1"></i>Date Range
                                             </label>
                                             <input id="rangeCalendar" type="text" class="form-control"
                                                 placeholder="Select date range" readonly>
+                                        </div>
+                                    @endcan
+
+                                    <!-- Status Filter -->
+                                    @can('coupons.view.any')
+                                        <div class="col-lg-2 col-md-6">
+                                            <label for="filterStatus" class="form-label fw-semibold mb-2">
+                                                <i class="ri-filter-line me-1"></i>Status
+                                            </label>
+                                            <select id="filterStatus" class="form-select" name="status">
+                                                <option value="">All Status</option>
+                                                <option value="1">Active</option>
+                                                <option value="0">Inactive</option>
+                                            </select>
+                                        </div>
+                                    @endcan
+
+                                    <!-- Type Filter -->
+                                    @can('coupons.view.any')
+                                        <div class="col-lg-2 col-md-6">
+                                            <label for="filterType" class="form-label fw-semibold mb-2">
+                                                <i class="ri-coupon-line me-1"></i>Type
+                                            </label>
+                                            <select id="filterType" class="form-select" name="type">
+                                                <option value="">All Types</option>
+                                                <option value="percentage">Percentage</option>
+                                                <option value="fixed_amount">Fixed Amount</option>
+                                            </select>
+                                        </div>
+                                    @endcan
+
+                                    <!-- Usage Status Filter -->
+                                    @can('coupons.view.any')
+                                        <div class="col-lg-2 col-md-6">
+                                            <label for="filterUsage" class="form-label fw-semibold mb-2">
+                                                <i class="ri-user-line me-1"></i>Usage Status
+                                            </label>
+                                            <select id="filterUsage" class="form-select" name="usage_status">
+                                                <option value="">All</option>
+                                                <option value="available">Available</option>
+                                                <option value="fully_used">Fully Used</option>
+                                                <option value="expired">Expired</option>
+                                            </select>
                                         </div>
                                     @endcan
 
@@ -76,11 +95,10 @@
                                                 class="btn btn-outline-secondary px-4">
                                                 <i class="ri-refresh-line me-1"></i> Reset
                                             </button>
-                                            @can('orders.export')
-                                                <button id="exportOrdersBtn" type="button"
-                                                    class="btn btn-outline-primary px-4">
-                                                    <i class="ri-download-line me-1"></i> Export
-                                                </button>
+                                            @can('coupons.create')
+                                                <a href="{{ route('coupons.create') }}" class="btn btn-primary px-4 modal_open">
+                                                    <i class="ri-add-line me-1"></i> Add Coupon
+                                                </a>
                                             @endcan
                                         </div>
                                     </div>
@@ -91,21 +109,9 @@
                     </div>
                 </div>
 
-                <!-- Orders Table -->
-                @cannot('orders.view.any')
-                    <div class="row mb-3">
-                        <div class="col-12">
-                            <div class="alert alert-warning border-0 shadow-sm" role="alert">
-                                <div class="d-flex align-items-center">
-                                    <i class="ri-alert-line fs-18 me-2"></i>
-                                    <div>
-                                        <strong>Access Restricted!</strong> You don't have permission to view orders.
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                @else
+
+                <!-- Coupons Table -->
+                @can('coupons.view.any')
                     <div class="row">
                         <div class="col-12">
                             <div class="card border-0 shadow-sm">
@@ -127,13 +133,14 @@
                                         <table id="dataTable" class="table table-bordered table-hover align-middle w-100">
                                             <thead class="table-light">
                                                 <tr>
-                                                    <th class="px-3 py-3 fw-semibold">Order ID</th>
-                                                    <th class="px-3 py-3 fw-semibold">Customer</th>
-                                                    <th class="px-3 py-3 fw-semibold text-center">Items</th>
-                                                    <th class="px-3 py-3 fw-semibold text-center">Amount</th>
+                                                    <th class="px-3 py-3 fw-semibold">#</th>
+                                                    <th class="px-3 py-3 fw-semibold">Code</th>
+                                                    <th class="px-3 py-3 fw-semibold">Name</th>
+                                                    <th class="px-3 py-3 fw-semibold text-center">Discount</th>
+                                                    <th class="px-3 py-3 fw-semibold text-center">Usage</th>
                                                     <th class="px-3 py-3 fw-semibold text-center">Status</th>
-                                                    <th class="px-3 py-3 fw-semibold text-center">Rating</th>
-                                                    <th class="px-3 py-3 fw-semibold">Created</th>
+                                                    <th class="px-3 py-3 fw-semibold">Validity</th>
+                                                    <th class="px-3 py-3 fw-semibold">Updated</th>
                                                     <th class="px-3 py-3 fw-semibold text-center">Action</th>
                                                 </tr>
                                             </thead>
@@ -158,99 +165,21 @@
                             </div>
                         </div>
                     </div>
-                @endcannot
-
-                <!-- Order Status Reference -->
-                <div class="row mt-4">
-                    <div class="col-12">
-                        <div class="card border-0 shadow-sm">
-                            <div class="card-header bg-white border-bottom py-3">
-                                <h6 class="mb-0 fw-semibold">
-                                    <i class="ri-information-line me-2"></i>Order Status Reference
-                                </h6>
-                            </div>
-                            <div class="card-body p-0">
-                                <div class="table-responsive">
-                                    <table class="table table-bordered align-middle mb-0">
-                                        <thead class="table-light">
-                                            <tr>
-                                                <th class="px-3 py-2 fw-semibold" width="5%">#</th>
-                                                <th class="px-3 py-2 fw-semibold" width="25%">Status</th>
-                                                <th class="px-3 py-2 fw-semibold">Description</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td class="px-3 py-2 fw-medium">1</td>
-                                                <td class="px-3 py-2"><span class="badge bg-warning text-dark">Pending
-                                                        Payment</span></td>
-                                                <td class="px-3 py-2">Order placed but payment is not completed yet.</td>
-                                            </tr>
-                                            <tr>
-                                                <td class="px-3 py-2 fw-medium">2</td>
-                                                <td class="px-3 py-2"><span class="badge bg-success">Payment
-                                                        Received</span></td>
-                                                <td class="px-3 py-2">Payment has been received successfully.</td>
-                                            </tr>
-                                            <tr>
-                                                <td class="px-3 py-2 fw-medium">3</td>
-                                                <td class="px-3 py-2"><span class="badge bg-primary">Confirmed</span></td>
-                                                <td class="px-3 py-2">Order is confirmed and ready for processing.</td>
-                                            </tr>
-                                            <tr>
-                                                <td class="px-3 py-2 fw-medium">4</td>
-                                                <td class="px-3 py-2"><span class="badge bg-info">Processing</span></td>
-                                                <td class="px-3 py-2">Order is currently being prepared.</td>
-                                            </tr>
-                                            <tr>
-                                                <td class="px-3 py-2 fw-medium">5</td>
-                                                <td class="px-3 py-2"><span class="badge bg-primary">Packed</span></td>
-                                                <td class="px-3 py-2">Items are packed and ready for shipment.</td>
-                                            </tr>
-                                            <tr>
-                                                <td class="px-3 py-2 fw-medium">6</td>
-                                                <td class="px-3 py-2"><span class="badge bg-secondary">Shipped</span></td>
-                                                <td class="px-3 py-2">Order has been shipped from warehouse.</td>
-                                            </tr>
-                                            <tr>
-                                                <td class="px-3 py-2 fw-medium">7</td>
-                                                <td class="px-3 py-2"><span class="badge bg-info">In Transit</span></td>
-                                                <td class="px-3 py-2">Order is on the way to the delivery address.</td>
-                                            </tr>
-                                            <tr>
-                                                <td class="px-3 py-2 fw-medium">8</td>
-                                                <td class="px-3 py-2"><span class="badge bg-warning text-dark">Out for
-                                                        Delivery</span></td>
-                                                <td class="px-3 py-2">Order will be delivered today.</td>
-                                            </tr>
-                                            <tr>
-                                                <td class="px-3 py-2 fw-medium">9</td>
-                                                <td class="px-3 py-2"><span class="badge bg-success">Delivered</span></td>
-                                                <td class="px-3 py-2">Order has been delivered successfully.</td>
-                                            </tr>
-                                            <tr>
-                                                <td class="px-3 py-2 fw-medium">10</td>
-                                                <td class="px-3 py-2"><span class="badge bg-warning text-dark">Cancel
-                                                        Requested</span></td>
-                                                <td class="px-3 py-2">Customer has requested cancellation.</td>
-                                            </tr>
-                                            <tr>
-                                                <td class="px-3 py-2 fw-medium">11</td>
-                                                <td class="px-3 py-2"><span class="badge bg-danger">Cancelled</span></td>
-                                                <td class="px-3 py-2">Order has been cancelled.</td>
-                                            </tr>
-                                            <tr>
-                                                <td class="px-3 py-2 fw-medium">12</td>
-                                                <td class="px-3 py-2"><span class="badge bg-danger">Failed</span></td>
-                                                <td class="px-3 py-2">Order failed due to payment or system error.</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
+                @else
+                    <!-- No Permission Alert -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="alert alert-warning border-0 shadow-sm" role="alert">
+                                <div class="d-flex align-items-center">
+                                    <i class="ri-alert-line fs-18 me-2"></i>
+                                    <div>
+                                        <strong>Access Restricted!</strong> You don't have permission to view coupons.
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
+                @endcan
 
             </div>
         </div>
@@ -259,26 +188,32 @@
 
 @push('style')
     <link rel="stylesheet" href="{{ asset('assets/admin/css/plugins/dataTables.dataTables.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/admin/css/plugins/flatpickr.min.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/admin/css/plugins/jquery-confirm.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/admin/css/plugins/flatpickr.min.css') }}">
     <style>
-        .btn {
-            height: 38px;
+        .statistics-card {
+            transition: all 0.3s ease;
         }
 
-        .status-badge {
-            padding: 0.25rem 0.75rem;
-            border-radius: 0.375rem;
-            font-size: 0.75rem;
-            font-weight: 500;
+        .statistics-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .coupon-code {
+            font-family: 'Courier New', monospace;
+            background: #f8f9fa;
+            padding: 2px 8px;
+            border-radius: 4px;
+            border: 1px dashed #dee2e6;
         }
     </style>
 @endpush
 
 @push('scripts')
     <script src="{{ asset('assets/admin/js/plugins/dataTables.js') }}"></script>
-    <script src="{{ asset('assets/admin/js/plugins/flatpickr.min.js') }}"></script>
     <script src="{{ asset('assets/admin/js/plugins/jquery-confirm.min.js') }}"></script>
+    <script src="{{ asset('assets/admin/js/plugins/flatpickr.min.js') }}"></script>
 
     <script>
         (function($) {
@@ -301,7 +236,7 @@
                         <div class="spinner-border text-primary mb-3" style="width: 3rem; height: 3rem;" role="status">
                             <span class="visually-hidden">Loading...</span>
                         </div>
-                        <p class="text-muted fw-semibold mb-0">Loading orders...</p>
+                        <p class="text-muted fw-semibold mb-0">Loading coupons...</p>
                         <small class="text-muted">Please wait</small>
                     </div>
                 </div>
@@ -363,7 +298,7 @@
              * ------------------------------------ */
             function showLoadingOverlay() {
                 // Disable filter inputs
-                $('#rangeCalendar, #filterStatus').prop('disabled', true);
+                $('#rangeCalendar, #filterStatus, #filterType, #filterUsage').prop('disabled', true);
 
                 // Update search button
                 $searchBtn.prop('disabled', true).html(
@@ -372,9 +307,6 @@
 
                 // Update reset button
                 $resetBtn.prop('disabled', true).addClass('disabled');
-
-                // Update export button
-                $('#exportOrdersBtn').prop('disabled', true);
 
                 // Add loading overlay to table
                 if ($dataTableWrapper.find('.loading-overlay').length === 0) {
@@ -387,16 +319,13 @@
              * ------------------------------------ */
             function hideLoadingOverlay() {
                 // Enable filter inputs
-                $('#rangeCalendar, #filterStatus').prop('disabled', false);
+                $('#rangeCalendar, #filterStatus, #filterType, #filterUsage').prop('disabled', false);
 
                 // Reset search button
                 $searchBtn.prop('disabled', false).html('<i class="ri-search-line me-1"></i> Search');
 
                 // Reset reset button
                 $resetBtn.prop('disabled', false).removeClass('disabled');
-
-                // Reset export button
-                $('#exportOrdersBtn').prop('disabled', false);
 
                 // Remove loading overlay
                 $dataTableWrapper.find('.loading-overlay').fadeOut(200, function() {
@@ -418,6 +347,10 @@
                 isFilterChange = false;
             }
 
+
+
+
+
             /* ------------------------------------
              * Initialize DataTable
              * ------------------------------------ */
@@ -433,6 +366,10 @@
                     })
                     .on('xhr.dt', function(e, settings, json, xhr) {
                         hideLoadingOverlay();
+                        // Update statistics from response
+                        if (json && json.statistics) {
+                            updateStatistics(json.statistics);
+                        }
                     })
                     .DataTable({
                         processing: false,
@@ -447,9 +384,11 @@
                         ],
 
                         ajax: {
-                            url: "{{ route('orders.index') }}",
+                            url: "{{ route('coupons.index') }}",
                             data: function(d) {
                                 d.status = $('#filterStatus').val();
+                                d.type = $('#filterType').val();
+                                d.usage_status = $('#filterUsage').val();
                                 d.date_range = $('#rangeCalendar').val();
                                 d._token = "{{ csrf_token() }}";
                             },
@@ -458,7 +397,7 @@
                                 console.error('DataTable error:', error);
 
                                 showAlert(
-                                    '<strong>Error!</strong> Unable to load orders. Please check your connection and try again.',
+                                    '<strong>Error!</strong> Unable to load coupons. Please check your connection and try again.',
                                     'danger',
                                     'error-warning-line',
                                     6000
@@ -467,34 +406,41 @@
                         },
 
                         columns: [{
-                                data: 'order_number',
-                                className: 'px-3 py-2 fw-semibold text-primary'
+                                data: 'id',
+                                className: 'px-3 py-2 fw-semibold text-primary',
+                                width: '60px'
                             },
                             {
-                                data: 'customer',
-                                className: 'px-3 py-2 fw-medium'
+                                data: 'code',
+                                className: 'px-3 py-2 fw-medium',
+                                render: function(data) {
+                                    return `<span class="coupon-code">${data}</span>`;
+                                }
                             },
                             {
-                                data: 'items_count',
+                                data: 'name',
+                                className: 'px-3 py-2'
+                            },
+
+                            {
+                                data: 'discount',
                                 className: 'px-3 py-2 text-center fw-semibold'
                             },
                             {
-                                data: 'amount',
-                                className: 'px-3 py-2 text-center fw-semibold',
+                                data: 'usage',
+                                className: 'px-3 py-2 text-center',
                                 orderable: false
                             },
                             {
                                 data: 'status',
-                                className: 'px-3 py-2 text-center',
-                                orderable: false
+                                className: 'px-3 py-2 text-center'
                             },
                             {
-                                data: 'rating',
-                                className: 'px-3 py-2 text-center',
-                                orderable: false
+                                data: 'validity',
+                                className: 'px-3 py-2 text-muted small'
                             },
                             {
-                                data: 'created_at',
+                                data: 'updated_at',
                                 className: 'px-3 py-2 text-muted small'
                             },
                             {
@@ -511,17 +457,17 @@
 
                         language: {
                             search: "",
-                            searchPlaceholder: "Search orders...",
+                            searchPlaceholder: "Search coupon code, name...",
                             lengthMenu: "_MENU_ per page",
                             zeroRecords: `
                                 <div class="text-center py-5 my-5">
-                                    <i class="ri-shopping-bag-line display-1 text-muted mb-3 d-block"></i>
-                                    <h5 class="text-muted mb-2">No Orders Found</h5>
+                                    <i class="ri-coupon-line display-1 text-muted mb-3 d-block"></i>
+                                    <h5 class="text-muted mb-2">No Coupons Found</h5>
                                     <p class="text-muted mb-0">Try adjusting your filters or search criteria</p>
                                 </div>
                             `,
-                            info: "Showing _START_ to _END_ of _TOTAL_ orders",
-                            infoEmpty: "No orders to display",
+                            info: "Showing _START_ to _END_ of _TOTAL_ coupons",
+                            infoEmpty: "No coupons to display",
                             infoFiltered: "(filtered from _MAX_ total)",
                             paginate: {
                                 first: '<i class="ri-skip-back-mini-line"></i>',
@@ -568,7 +514,7 @@
                             // Show success message only on initial load or filter change
                             if ((isInitialLoad || isFilterChange) && recordsTotal > 0) {
                                 showAlert(
-                                    `<strong>Success!</strong> Loaded ${recordsTotal} order(s) successfully.`,
+                                    `<strong>Success!</strong> Loaded ${recordsTotal} coupon(s) successfully.`,
                                     'success',
                                     'checkbox-circle-line',
                                     3000
@@ -590,6 +536,7 @@
                 $searchBtn.on('click', function() {
                     isFilterChange = true;
                     table.draw();
+                    loadStatistics();
                 });
 
                 // Reset button
@@ -601,6 +548,8 @@
                         calendar.clear();
                     }
                     $('#filterStatus').val('');
+                    $('#filterType').val('');
+                    $('#filterUsage').val('');
 
                     // Visual feedback
                     $this.prop('disabled', true).html(
@@ -611,11 +560,12 @@
 
                     setTimeout(function() {
                         table.draw();
+                        loadStatistics();
                         $this.prop('disabled', false).html(
                             '<i class="ri-refresh-line me-1"></i> Reset');
 
                         showAlert(
-                            '<strong>Filters Reset!</strong> Showing all orders.',
+                            '<strong>Filters Reset!</strong> Showing all coupons.',
                             'info',
                             'information-line',
                             2500
@@ -623,57 +573,14 @@
                     }, 300);
                 });
 
-                // Auto-search on status change
-                $('#filterStatus').on('change', function() {
+                // Auto-search on filter changes
+                $('#filterStatus, #filterType, #filterUsage').on('change', function() {
                     isFilterChange = true;
                     $searchBtn.click();
                 });
 
-                // Export button
-                @can('orders.export')
-                    $('#exportOrdersBtn').on('click', function() {
-                        const $this = $(this);
-                        const status = $('#filterStatus').val();
-                        const dateRange = $('#rangeCalendar').val();
-
-                        // Show loading
-                        $this.prop('disabled', true).html(
-                            '<span class="spinner-border spinner-border-sm me-2"></span>Exporting...'
-                        );
-
-                        // Prepare export data
-                        const params = new URLSearchParams();
-                        if (status) params.append('status', status);
-                        if (dateRange) params.append('date_range', dateRange);
-                        params.append('_token', "{{ csrf_token() }}");
-
-                        // Create download link
-                        const url = "#" + params.toString();
-
-                        // Create temporary anchor for download
-                        const link = document.createElement('a');
-                        link.href = url;
-                        link.download = 'orders_export_' + new Date().toISOString().split('T')[0] + '.xlsx';
-                        document.body.appendChild(link);
-                        link.click();
-                        document.body.removeChild(link);
-
-                        // Reset button
-                        setTimeout(() => {
-                            $this.prop('disabled', false).html(
-                                '<i class="ri-download-line me-1"></i> Export');
-                            showAlert(
-                                '<strong>Export Started!</strong> Your orders export has been initiated.',
-                                'success',
-                                'download-line',
-                                3000
-                            );
-                        }, 500);
-                    });
-                @endcan
-
                 // Enter key to search
-                $('#filterStatus').on('keypress', function(e) {
+                $('#filterStatus, #filterType, #filterUsage').on('keypress', function(e) {
                     if (e.which === 13) {
                         $searchBtn.click();
                     }
@@ -693,20 +600,185 @@
             }
 
             /* ------------------------------------
+             * Delete Coupon Handler
+             * ------------------------------------ */
+            function initDeleteHandlers() {
+                $(document).on('click', '.delete-coupon', function(e) {
+                    e.preventDefault();
+                    const $this = $(this);
+                    const url = $this.data('url');
+                    const couponCode = $this.data('code');
+                    const couponName = $this.data('name');
+                    const usageCount = $this.data('usage') || 0;
+
+                    let warningMessage =
+                        `Are you sure you want to delete coupon <strong>"${couponCode}"</strong>?`;
+
+                    if (usageCount > 0) {
+                        warningMessage += `<br><span class="text-danger">
+                            <i class="ri-alert-line me-1"></i>
+                            Warning: This coupon has been used ${usageCount} time(s). 
+                            Deleting it may affect order history.
+                        </span>`;
+                    }
+
+                    warningMessage += `<br><small class="text-muted">This action cannot be undone.</small>`;
+
+                    $.confirm({
+                        title: 'Confirm Delete',
+                        content: warningMessage,
+                        icon: 'ri-delete-bin-6-line',
+                        type: 'red',
+                        buttons: {
+                            confirm: {
+                                text: 'Delete',
+                                btnClass: 'btn-danger',
+                                action: function() {
+                                    $.ajax({
+                                        url: url,
+                                        type: 'DELETE',
+                                        data: {
+                                            _token: "{{ csrf_token() }}"
+                                        },
+                                        beforeSend: function() {
+                                            $this.prop('disabled', true).html(
+                                                '<span class="spinner-border spinner-border-sm"></span> Deleting...'
+                                            );
+                                        },
+                                        success: function(response) {
+                                            showAlert(
+                                                `<strong>Success!</strong> Coupon "${couponCode}" deleted successfully.`,
+                                                'success',
+                                                'checkbox-circle-line',
+                                                4000
+                                            );
+                                            table.draw();
+                                            loadStatistics();
+                                        },
+                                        error: function(xhr) {
+                                            showAlert(
+                                                `<strong>Error!</strong> ${xhr.responseJSON?.message || 'Unable to delete coupon.'}`,
+                                                'danger',
+                                                'error-warning-line',
+                                                5000
+                                            );
+                                            $this.prop('disabled', false).html(
+                                                '<i class="ri-delete-bin-6-line"></i>'
+                                            );
+                                        }
+                                    });
+                                }
+                            },
+                            cancel: {
+                                text: 'Cancel',
+                                btnClass: 'btn-secondary'
+                            }
+                        }
+                    });
+                });
+            }
+
+            /* ------------------------------------
+             * Status Update Handler
+             * ------------------------------------ */
+            function initStatusHandlers() {
+                $(document).on('click', '.change-coupon-status', function(e) {
+                    e.preventDefault();
+                    const $this = $(this);
+                    const url = $this.data('url');
+                    const couponCode = $this.data('code');
+                    const currentStatus = $this.data('status');
+                    const isActive = currentStatus === '1';
+                    const action = isActive ? 'deactivate' : 'activate';
+
+                    let warningMessage =
+                        `Are you sure you want to ${action} coupon <strong>"${couponCode}"</strong>?`;
+
+                    if (isActive) {
+                        warningMessage += `<br><span class="text-warning">
+                            <i class="ri-alert-line me-1"></i>
+                            Warning: Deactivating this coupon will make it unavailable for future orders.
+                        </span>`;
+                    }
+
+                    warningMessage +=
+                        `<br><small class="text-muted">This will affect coupon availability for customers.</small>`;
+
+                    $.confirm({
+                        title: `Confirm ${action.charAt(0).toUpperCase() + action.slice(1)}`,
+                        content: warningMessage,
+                        icon: isActive ? 'ri-stop-circle-line' : 'ri-play-circle-line',
+                        type: isActive ? 'orange' : 'blue',
+                        buttons: {
+                            confirm: {
+                                text: isActive ? 'Deactivate' : 'Activate',
+                                btnClass: isActive ? 'btn-warning' : 'btn-primary',
+                                action: function() {
+                                    $.ajax({
+                                        url: url,
+                                        type: 'POST',
+                                        data: {
+                                            _token: "{{ csrf_token() }}",
+                                            _method: 'PUT'
+                                        },
+                                        beforeSend: function() {
+                                            $this.prop('disabled', true).html(
+                                                '<span class="spinner-border spinner-border-sm"></span> Processing...'
+                                            );
+                                        },
+                                        success: function(response) {
+                                            const message = isActive ?
+                                                `Coupon "${couponCode}" has been deactivated.` :
+                                                `Coupon "${couponCode}" has been activated successfully.`;
+
+                                            showAlert(
+                                                `<strong>Success!</strong> ${message}`,
+                                                'success',
+                                                'checkbox-circle-line',
+                                                4000
+                                            );
+                                            table.draw();
+                                            loadStatistics();
+                                        },
+                                        error: function(xhr) {
+                                            showAlert(
+                                                `<strong>Error!</strong> ${xhr.responseJSON?.message || `Unable to ${action} coupon.`}`,
+                                                'danger',
+                                                'error-warning-line',
+                                                5000
+                                            );
+                                            $this.prop('disabled', false);
+                                        }
+                                    });
+                                }
+                            },
+                            cancel: {
+                                text: 'Cancel',
+                                btnClass: 'btn-secondary'
+                            }
+                        }
+                    });
+                });
+            }
+
+            /* ------------------------------------
              * Initialize Everything
              * ------------------------------------ */
             $(document).ready(function() {
-                initDateRangePicker();
-                @can('orders.view.any')
+                @can('coupons.view.any')
+                    initDateRangePicker();
                     initDataTable();
                     bindFilterEvents();
                     initTooltips();
+                    initDeleteHandlers();
+                    initStatusHandlers();
+                    loadStatistics();
 
                     // Show welcome message on initial load
                     setTimeout(function() {
                         if (isInitialLoad) {
                             showAlert(
-                                '<strong>Welcome!</strong> Order management system loaded successfully.',
+                                '<strong>Welcome!</strong> Coupon management system loaded successfully.',
                                 'info',
                                 'information-line',
                                 3000

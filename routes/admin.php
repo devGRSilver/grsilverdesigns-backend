@@ -20,7 +20,10 @@ use App\Http\Controllers\Admin\{
     RoleController,
     SettingController,
     StaffController,
-    TransactionsController
+    TransactionsController,
+    CouponController,
+    // Add these controllers if needed
+    ReportController,
 };
 
 /*
@@ -114,17 +117,17 @@ Route::prefix('admin')->middleware('auth:admin')->group(function () {
 
         Route::get('{id}/stats', [UserController::class, 'getStats'])
             ->name('stats')
-            ->middleware('permission:users.view');
+            ->middleware('permission:users.view,admin');
 
 
         Route::get('{id}/orders', [UserController::class, 'getOrders'])
             ->name('orders')
-            ->middleware('permission:users.view');
+            ->middleware('permission:users.view,admin');
 
 
         Route::get('{id}/transactions', [UserController::class, 'getTransactions'])
             ->name('transactions')
-            ->middleware('permission:users.view');
+            ->middleware('permission:users.view,admin');
 
 
 
@@ -572,10 +575,10 @@ Route::prefix('admin')->middleware('auth:admin')->group(function () {
 
 
     /*
-|--------------------------------------------------------------------------
-| Orders Module
-|--------------------------------------------------------------------------
-*/
+    |--------------------------------------------------------------------------
+    | Orders Module
+    |--------------------------------------------------------------------------
+    */
     Route::prefix('orders')->name('orders.')->group(function () {
         Route::get('/', [OrderController::class, 'index'])
             ->name('index')
@@ -584,7 +587,10 @@ Route::prefix('admin')->middleware('auth:admin')->group(function () {
         Route::get('{id}', [OrderController::class, 'show'])
             ->name('show')
             ->middleware('permission:orders.view,admin');
-        Route::put('{id}/status', [OrderController::class, 'updateStatus'])->name('status')->middleware('permission:orders.update.status,admin');
+
+        Route::put('{id}/status', [OrderController::class, 'updateStatus'])
+            ->name('status')
+            ->middleware('permission:orders.update.status,admin');
     });
 
     /*
@@ -604,20 +610,71 @@ Route::prefix('admin')->middleware('auth:admin')->group(function () {
     });
 
 
+    /*
+    |--------------------------------------------------------------------------
+    | COUPON Module
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('coupons')->name('coupons.')->group(function () {
+        Route::get('/', [CouponController::class, 'index'])
+            ->name('index')
+            ->middleware('permission:coupons.view.any,admin');
+
+        Route::get('/create', [CouponController::class, 'create'])
+            ->name('create')
+            ->middleware('permission:coupons.create,admin');
+
+        Route::post('/', [CouponController::class, 'store'])
+            ->name('store')
+            ->middleware('permission:coupons.create,admin');
+
+        Route::get('{coupon}', [CouponController::class, 'show'])
+            ->name('show')
+            ->middleware('permission:coupons.view,admin');
+
+        Route::get('{coupon}/edit', [CouponController::class, 'edit'])
+            ->name('edit')
+            ->middleware('permission:coupons.update,admin');
+
+        Route::put('{coupon}', [CouponController::class, 'update'])
+            ->name('update')
+            ->middleware('permission:coupons.update,admin');
+
+        // Update coupon status
+        Route::put('{coupon}/status', [CouponController::class, 'updateStatus'])
+            ->name('status')
+            ->middleware('permission:coupons.update.status,admin');
+
+        // Delete coupon 
+        Route::delete('{coupon}', [CouponController::class, 'delete'])
+            ->name('delete')
+            ->middleware('permission:coupons.delete,admin');
+    });
 
     /*
     |--------------------------------------------------------------------------
-    | DISCOUNT Module
+    | Report Module
     |--------------------------------------------------------------------------
     */
-    Route::prefix('discount')->name('discount.')->group(function () {
-        Route::get('/', [OrderController::class, 'index'])
-            ->name('index')
-            ->middleware('permission:discount.view.any,admin');
+    Route::prefix('reports')->name('reports.')->group(function () {
+        Route::get('sales', [ReportController::class, 'sales'])
+            ->name('sales')
+            ->middleware('permission:reports.sales,admin');
 
-        Route::get('{id}', [OrderController::class, 'show'])
-            ->name('show')
-            ->middleware('permission:discount.view,admin');
-        Route::put('{id}/status', [OrderController::class, 'updateStatus'])->name('status')->middleware('permission:discount.update.status,admin');
+        Route::get('products', [ReportController::class, 'products'])
+            ->name('products')
+            ->middleware('permission:reports.products,admin');
+
+        Route::get('customers', [ReportController::class, 'customers'])
+            ->name('customers')
+            ->middleware('permission:reports.customers,admin');
+
+        Route::get('orders', [ReportController::class, 'orders'])
+            ->name('orders')
+            ->middleware('permission:reports.orders,admin');
+
+        Route::get('revenue', [ReportController::class, 'revenue'])
+            ->name('revenue')
+            ->middleware('permission:reports.revenue,admin');
     });
 });

@@ -38,7 +38,7 @@ class DashboardController extends ResponseController
             Log::error('Dashboard stats error: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString()
             ]);
-            return $this->errorResponse('Failed to load statistics', 500);
+            return $this->errorResponse($e->getMessage(), 500);
         }
     }
 

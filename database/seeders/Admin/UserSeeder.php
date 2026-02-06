@@ -71,11 +71,11 @@ class UserSeeder extends Seeder
                 [
                     'name'              => $data['name'],
                     'phone'             => $data['phone'],
-                    'phone_code'        => '+91',
+                    'phone_code'        => '91',
                     'email_verified_at' => now(),
                     'password'          => Hash::make($data['password']),
                     'timezone'          => 'Asia/Kolkata',
-                    'currency'          => 'INR',
+                    'currency'          => '$',
                     'status'            => Constant::ACTIVE,
                     'last_login_at'     => now(),
                 ]

@@ -8,6 +8,7 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
 use Carbon\Carbon;
+use DateTime;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -24,66 +25,99 @@ class UserService
      **********************************************/
     public function getUsersForDataTable($request): array
     {
-        $columns = ['id', 'name', 'phone', 'email', 'created_at'];
+        $columns = ['id', 'name', 'phone_code', 'phone', 'email', 'created_at'];
 
         /** BASE QUERY */
-        $baseQuery = User::whereHas('roles', function ($q) {
-            $q->where('name', $this->defaultRole);
-        });
+        $baseQuery = User::withCount('orders')
+            ->whereHas('roles', function ($q) {
+                $q->where('name', $this->defaultRole);
+            });
 
-        /** TOTAL RECORDS (WITHOUT FILTER) */
         $recordsTotal = (clone $baseQuery)->count();
 
-        /** FILTERED QUERY */
         $filteredQuery = clone $baseQuery;
 
-        /** SEARCH */
-        if ($search = $request->input('search.value')) {
-            $filteredQuery->where(function ($q) use ($search) {
+        if ($search = trim($request->input('search.value'))) {
+
+            $cleanPhoneSearch = preg_replace('/[^\d+]/', '', $search);
+
+            $filteredQuery->where(function ($q) use ($search, $cleanPhoneSearch) {
                 $q->where('name', 'LIKE', "%{$search}%")
                     ->orWhere('email', 'LIKE', "%{$search}%")
-                    ->orWhere('phone', 'LIKE', "%{$search}%")
-                    ->orWhereRaw(
+                    ->orWhere('phone', 'LIKE', "%{$search}%");
+
+                if (!empty($cleanPhoneSearch)) {
+                    $dbSearch = ltrim($cleanPhoneSearch, '+');
+
+                    $q->orWhereRaw(
                         "CONCAT(phone_code, phone) LIKE ?",
-                        ["%{$search}%"]
+                        ["%{$dbSearch}%"]
                     );
+
+                    if (strlen($dbSearch) > 2) {
+                        $q->orWhere('phone', 'LIKE', "%{$dbSearch}%");
+                    }
+                }
             });
         }
 
-        /** DATE FILTER */
         if ($range = $request->input('date_range')) {
-            [$start, $end] = array_pad(explode(' to ', $range), 2, $range);
+            $dates = explode(' to ', $range);
 
-            $filteredQuery->whereBetween('created_at', [
-                "{$start} 00:00:00",
-                "{$end} 23:59:59",
-            ]);
+            if (count($dates) === 2) {
+                $start = trim($dates[0]);
+                $end = trim($dates[1]);
+
+                // Validate dates
+                if ($this->isValidDate($start) && $this->isValidDate($end)) {
+                    $filteredQuery->whereBetween('created_at', [
+                        "{$start} 00:00:00",
+                        "{$end} 23:59:59",
+                    ]);
+                }
+            } elseif (count($dates) === 1) {
+                $start = trim($dates[0]);
+                if ($this->isValidDate($start)) {
+                    $filteredQuery->whereDate('created_at', $start);
+                }
+            }
         }
 
-        /** FILTERED COUNT (BEFORE PAGINATION) */
+
+        // Status Filter
+        if ($request->filled('status')) {
+            $filteredQuery->where('status', $request->status);
+        }
+
+
+
         $recordsFiltered = (clone $filteredQuery)->count();
 
-        /** ORDERING */
-        $orderCol = $columns[$request->input('order.0.column', 0)] ?? 'id';
+        $orderColIndex = $request->input('order.0.column', 0);
+        $orderCol = $columns[$orderColIndex] ?? 'id';
         $orderDir = $request->input('order.0.dir', 'desc');
 
-        $filteredQuery->orderBy($orderCol, $orderDir);
+        if ($orderCol === 'phone') {
+            $filteredQuery->orderByRaw("CONCAT(phone_code, phone) {$orderDir}");
+        } else {
+            $filteredQuery->orderBy($orderCol, $orderDir);
+        }
 
-        /** PAGINATION */
+        $start = max(0, (int) $request->input('start', 0));
+        $length = max(1, min(100, (int) $request->input('length', 10))); // Limit to 100 records per page
+
         $users = $filteredQuery
-            ->offset($request->start)
-            ->limit($request->length)
+            ->skip($start)
+            ->take($length)
             ->get();
 
-        /** DATA MAPPING */
-        $data = $users->map(function ($user, $index) use ($request) {
+        $data = $users->map(function ($user, $index) use ($request, $start) {
 
-            $canView         = checkPermission('users.view');
-            $canEdit         = checkPermission('users.update');
-            $canDelete       = checkPermission('users.delete');
+            $canView = checkPermission('users.view');
+            $canEdit = checkPermission('users.update');
+            $canDelete = checkPermission('users.delete');
             $canUpdateStatus = checkPermission('users.update.status');
 
-            /** STATUS */
             if ($canUpdateStatus) {
                 $statusHtml = status_dropdown($user->status, [
                     'id'     => $user->id,
@@ -112,25 +146,47 @@ class UserService
             }
 
             return [
-                'id'          => $request->start + $index + 1,
+                'id'          => $start + $index + 1,
                 'name'        => ucfirst($user->name),
-                'phone'       => trim("{$user->phone_code} {$user->phone}"),
+                'phone'       => $this->formatPhoneNumber($user->phone_code, $user->phone),
                 'email'       => $user->email,
-                'total_order' => 0, // later optimize with withCount()
+                'total_order' => $user->orders_count ?? 0,
                 'status'      => $statusHtml,
                 'created_at'  => $user->created_at->format('d M Y h:i a'),
-                'action'      => $actions ? button_group($actions) : 'No actions',
+                'action'      => !empty($actions) ? button_group($actions) : 'No actions',
             ];
         });
 
         return [
-            'draw'            => (int) $request->draw,
+            'draw'            => (int) $request->input('draw', 0),
             'recordsTotal'    => $recordsTotal,
             'recordsFiltered' => $recordsFiltered,
             'data'            => $data,
         ];
     }
 
+    /**
+     * Helper method to validate date
+     */
+    private function isValidDate($date): bool
+    {
+        $format = 'Y-m-d';
+        $d = DateTime::createFromFormat($format, $date);
+        return $d && $d->format($format) === $date;
+    }
+
+    /**
+     * Helper method to format phone number
+     */
+    private function formatPhoneNumber($phoneCode, $phone): string
+    {
+        if (empty($phone)) {
+            return 'N/A';
+        }
+
+        $formatted = trim($phoneCode . ' ' . $phone);
+        return !empty($formatted) ? $formatted : 'N/A';
+    }
 
     public function getStats(array $requestData): array
     {
@@ -187,16 +243,37 @@ class UserService
         DB::beginTransaction();
 
         try {
-            $validated['password'] = Hash::make($validated['password']);
+            // Check if user with same email/phone exists in soft-deleted records
+            $softDeletedUser = User::withTrashed()
+                ->where(function ($query) use ($validated) {
+                    $query->where('email', $validated['email'])
+                        ->orWhere('phone', $validated['phone']);
+                })
+                ->whereNotNull('deleted_at')
+                ->first();
 
-            $user = User::create($validated);
+            if ($softDeletedUser) {
+                // Restore and update the soft-deleted user
+                $softDeletedUser->restore();
 
-            $role = Role::firstOrCreate([
-                'name'       => $this->defaultRole,
-                'guard_name' => 'web',
-            ]);
+                $validated['password'] = Hash::make($validated['password']);
+                $softDeletedUser->update($validated);
 
-            $user->assignRole($role);
+                $user = $softDeletedUser;
+            } else {
+                // Create new user
+                $validated['password'] = Hash::make($validated['password']);
+                $user = User::create($validated);
+            }
+
+            // Assign role (check if already has role first)
+            if (!$user->hasRole($this->defaultRole)) {
+                $role = Role::firstOrCreate([
+                    'name'       => $this->defaultRole,
+                    'guard_name' => 'web',
+                ]);
+                $user->assignRole($role);
+            }
 
             DB::commit();
             return $user;

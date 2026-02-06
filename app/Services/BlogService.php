@@ -101,7 +101,7 @@ class BlogService
                 'title'       => $titleHtml,
                 'slug'        => $blog->slug,
                 'status'      => $statusHtml,
-                'updated_at'  => $blog->updated_at->format('d M Y'),
+                'published_at'  => $blog->updated_at->format('d M Y'),
                 'action'      => !empty($actionButtons) ? button_group($actionButtons) : 'No actions',
             ];
         });

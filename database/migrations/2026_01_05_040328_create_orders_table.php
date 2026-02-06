@@ -46,7 +46,7 @@ return new class extends Migration
                 ->comment('total_amount - discount_amount');
 
 
-            $table->string('currency_code', 3)->default('INR');
+            $table->string('currency_code', 3)->default('$');
 
             // Order status
             $table->enum('status', array_map(
@@ -81,9 +81,6 @@ return new class extends Migration
             $table->string('courier_name')->nullable();
 
             // Customer snapshot
-            $table->string('customer_name');
-            $table->string('customer_email');
-            $table->string('customer_phone');
 
             // Meta
             $table->json('metadata')->nullable();

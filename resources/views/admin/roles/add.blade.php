@@ -5,36 +5,29 @@
         <div class="app-content-wrap">
             <div class="container-fluid">
 
-                <!-- PAGE HEADER WITH GRADIENT -->
-                <div class="row mb-5">
-                    <div class="col-12">
-                        <div
-                            class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
-                            <div>
-                                <div class="d-flex align-items-center gap-3 mb-2">
-                                    <div>
-                                        <h1 class="h2 fw-bold mb-1">Create New Role</h1>
-                                        <p class="text-muted mb-0">Configure permissions and assign this role.</p>
-                                    </div>
-                                </div>
-                            </div>
-
+                <!-- Page Header -->
+                <div class="row mb-3">
+                    <div class="col-xl-12">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <h1 class="fs-18 mb-0">{{ $title ?? 'Users' }}</h1>
                             <nav aria-label="breadcrumb">
-                                <ol class="breadcrumb bg-white shadow-sm border px-3 py-2 rounded-3">
+                                <ol class="breadcrumb breadcrumb-example1 mb-0">
                                     <li class="breadcrumb-item">
-                                        <a href="{{ route('admin.dashboard') }}" class="text-decoration-none">
-                                            <i class="bi bi-house-door me-1"></i>Home
-                                        </a>
+                                        <a href="{{ route('admin.dashboard') }}">Home</a>
                                     </li>
+
                                     <li class="breadcrumb-item">
-                                        <a href="{{ route('roles.index') }}" class="text-decoration-none">Roles</a>
+                                        <a href="{{ route('roles.index') }}">Roles </a>
                                     </li>
-                                    <li class="breadcrumb-item active text-primary fw-medium">Create</li>
+
+
+                                    <li class="breadcrumb-item active"> Add </li>
                                 </ol>
                             </nav>
                         </div>
                     </div>
                 </div>
+
 
                 <!-- FORM -->
                 <form action="{{ route('roles.store') }}" method="POST" id="roleForm" class="validate_form">
@@ -170,8 +163,7 @@
                                                 </div>
                                                 <div class="position-relative">
                                                     <div class="bg-white rounded-circle p-2 shadow-sm">
-                                                        <span id="selected-count"
-                                                            class="fs-3 fw-bold text-primary">0</span>
+                                                        <span id="selected-count" class="fs-3 fw-bold text-primary">0</span>
                                                     </div>
                                                 </div>
                                             </div>

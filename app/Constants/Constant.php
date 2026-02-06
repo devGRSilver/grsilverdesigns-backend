@@ -14,16 +14,5 @@ class Constant
     const OUT_OF_STOCK = 'out_of_stock';
     const IN_STOCK = 'in_stock';
 
-
-
-
-
-
-
-
-
-
-
-
-    // IMAGE SIZE CONSTANT 
+    const DEFAULT_CURRENCY = "$";
 }

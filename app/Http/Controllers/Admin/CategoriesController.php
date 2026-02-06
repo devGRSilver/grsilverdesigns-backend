@@ -65,10 +65,7 @@ class CategoriesController extends ResponseController
         } catch (\Exception $e) {
             Log::error('Category store failed: ' . $e->getMessage());
 
-            return $this->errorResponse(
-                "Failed to create {$this->resourceName}.",
-                500
-            );
+            return $this->errorResponse($e->getMessage(), 500);
         }
     }
 

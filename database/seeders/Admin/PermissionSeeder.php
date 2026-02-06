@@ -42,21 +42,50 @@ class PermissionSeeder extends Seeder
                 ['name' => 'users.delete', 'display_name' => 'Delete User'],
                 ['name' => 'users.update.status', 'display_name' => 'Update User Status'],
                 ['name' => 'users.reset.password', 'display_name' => 'Reset User Password'],
+                ['name' => 'users.export', 'display_name' => 'Export Users'],
             ],
 
-
+            // ID = 2
+            'Staff Management' => [
+                ['name' => 'staff.view.any', 'display_name' => 'View Staff'],
+                ['name' => 'staff.view', 'display_name' => 'View Staff Details'],
+                ['name' => 'staff.create', 'display_name' => 'Create Staff'],
+                ['name' => 'staff.update', 'display_name' => 'Update Staff'],
+                ['name' => 'staff.delete', 'display_name' => 'Delete Staff'],
+                ['name' => 'staff.update.status', 'display_name' => 'Update Staff Status'],
+                ['name' => 'staff.reset.password', 'display_name' => 'Reset Staff Password'],
+            ],
 
             // ID = 3
-            'Attribute Management' => [
-                ['name' => 'attributes.view.any', 'display_name' => 'View Attributes'],
-                ['name' => 'attributes.create', 'display_name' => 'Create Attribute'],
-                ['name' => 'attributes.delete', 'display_name' => 'Delete Attribute'],
-                ['name' => 'attributes.update.status', 'display_name' => 'Update Attributes Status'],
-                ['name' => 'attributes.values.create', 'display_name' => 'Create Attribute Value'],
-                ['name' => 'attributes.values.delete', 'display_name' => 'Delete Attribute Value'],
+            'Role Management' => [
+                ['name' => 'roles.view.any', 'display_name' => 'View Roles'],
+                ['name' => 'roles.view', 'display_name' => 'View Role Details'],
+                ['name' => 'roles.create', 'display_name' => 'Create Role'],
+                ['name' => 'roles.update', 'display_name' => 'Update Role'],
+                ['name' => 'roles.delete', 'display_name' => 'Delete Role'],
+                ['name' => 'roles.update.status', 'display_name' => 'Update Role Status'],
+                ['name' => 'roles.assign.permissions', 'display_name' => 'Assign Permissions'],
             ],
 
             // ID = 4
+            'Permission Management' => [
+                ['name' => 'permissions.view.any', 'display_name' => 'View Permissions'],
+                ['name' => 'permissions.update.status', 'display_name' => 'Update Permission Status'],
+            ],
+
+            // ID = 5
+            'Attribute Management' => [
+                ['name' => 'attributes.view.any', 'display_name' => 'View Attributes'],
+                ['name' => 'attributes.create', 'display_name' => 'Create Attribute'],
+                ['name' => 'attributes.update', 'display_name' => 'Update Attribute'],
+                ['name' => 'attributes.delete', 'display_name' => 'Delete Attribute'],
+                ['name' => 'attributes.update.status', 'display_name' => 'Update Attributes Status'],
+                ['name' => 'attributes.values.create', 'display_name' => 'Create Attribute Value'],
+                ['name' => 'attributes.values.update', 'display_name' => 'Update Attribute Value'],
+                ['name' => 'attributes.values.delete', 'display_name' => 'Delete Attribute Value'],
+            ],
+
+            // ID = 6
             'Categories Management' => [
                 ['name' => 'categories.view.any', 'display_name' => 'View All Categories'],
                 ['name' => 'categories.view', 'display_name' => 'View Category Details'],
@@ -66,7 +95,7 @@ class PermissionSeeder extends Seeder
                 ['name' => 'categories.update.status', 'display_name' => 'Update Category Status'],
             ],
 
-            // ID = 5
+            // ID = 7
             'Subcategories Management' => [
                 ['name' => 'subcategories.view.any', 'display_name' => 'View All Subcategories'],
                 ['name' => 'subcategories.view', 'display_name' => 'View Subcategory Details'],
@@ -76,7 +105,7 @@ class PermissionSeeder extends Seeder
                 ['name' => 'subcategories.update.status', 'display_name' => 'Update Subcategory Status'],
             ],
 
-            // ID = 6
+            // ID = 8
             'Product Management' => [
                 ['name' => 'products.view.any', 'display_name' => 'View All Products'],
                 ['name' => 'products.view', 'display_name' => 'View Product Details'],
@@ -84,29 +113,36 @@ class PermissionSeeder extends Seeder
                 ['name' => 'products.update', 'display_name' => 'Update Product'],
                 ['name' => 'products.delete', 'display_name' => 'Delete Product'],
                 ['name' => 'products.update.status', 'display_name' => 'Update Product Status'],
+                ['name' => 'products.images.upload', 'display_name' => 'Upload Product Images'],
                 ['name' => 'products.images.delete', 'display_name' => 'Delete Product Images'],
+                ['name' => 'products.variants.manage', 'display_name' => 'Manage Product Variants'],
                 ['name' => 'products.import', 'display_name' => 'Import Products'],
                 ['name' => 'products.export', 'display_name' => 'Export Products'],
             ],
 
-            // ID = 7
+            // ID = 9
             'Metal Management' => [
                 ['name' => 'metals.view.any', 'display_name' => 'View Metals'],
-                ['name' => 'metals.update', 'display_name' => 'Update Metals'],
+                ['name' => 'metals.create', 'display_name' => 'Create Metal'],
+                ['name' => 'metals.update', 'display_name' => 'Update Metal'],
+                ['name' => 'metals.delete', 'display_name' => 'Delete Metal'],
+                ['name' => 'metals.update.status', 'display_name' => 'Update Metal Status'],
                 ['name' => 'metals.assign', 'display_name' => 'Assign Metals'],
                 ['name' => 'metals.category.delete', 'display_name' => 'Delete Metal Category'],
                 ['name' => 'metals.subcategory.delete', 'display_name' => 'Delete Metal Subcategory'],
             ],
 
-            // ID = 8
+            // ID = 10
             'Content Management' => [
                 ['name' => 'contents.view.any', 'display_name' => 'View All Contents'],
                 ['name' => 'contents.view', 'display_name' => 'View Content Details'],
+                ['name' => 'contents.create', 'display_name' => 'Create Content'],
                 ['name' => 'contents.update', 'display_name' => 'Update Content'],
+                ['name' => 'contents.delete', 'display_name' => 'Delete Content'],
                 ['name' => 'contents.update.status', 'display_name' => 'Update Content Status'],
             ],
 
-            // ID = 9
+            // ID = 11
             'Blog Management' => [
                 ['name' => 'blogs.view.any', 'display_name' => 'View All Blogs'],
                 ['name' => 'blogs.view', 'display_name' => 'View Blog Details'],
@@ -116,56 +152,91 @@ class PermissionSeeder extends Seeder
                 ['name' => 'blogs.update.status', 'display_name' => 'Update Blog Status'],
             ],
 
-            // ID = 10
+            // ID = 12
             'Review Management' => [
                 ['name' => 'reviews.view.any', 'display_name' => 'View All Reviews'],
                 ['name' => 'reviews.view', 'display_name' => 'View Review Details'],
                 ['name' => 'reviews.update.status', 'display_name' => 'Update Review Status'],
                 ['name' => 'reviews.delete', 'display_name' => 'Delete Review'],
-            ],
-
-            // ID = 11
-            'Newsletter Management' => [
-                ['name' => 'newsletters.view.any', 'display_name' => 'View All Newsletters'],
-                ['name' => 'newsletters.update.status', 'display_name' => 'Update Newsletter Status'],
-            ],
-
-            // ID = 12
-            'Transaction Management' => [
-                ['name' => 'transactions.view.any', 'display_name' => 'View All Transactions'],
-                ['name' => 'transactions.view', 'display_name' => 'View Transaction Details'],
+                ['name' => 'reviews.export', 'display_name' => 'Export Reviews'],
             ],
 
             // ID = 13
+            'Newsletter Management' => [
+                ['name' => 'newsletters.view.any', 'display_name' => 'View All Newsletters'],
+                ['name' => 'newsletters.view', 'display_name' => 'View Newsletter Details'],
+                ['name' => 'newsletters.create', 'display_name' => 'Create Newsletter'],
+                ['name' => 'newsletters.update', 'display_name' => 'Update Newsletter'],
+                ['name' => 'newsletters.delete', 'display_name' => 'Delete Newsletter'],
+                ['name' => 'newsletters.update.status', 'display_name' => 'Update Newsletter Status'],
+                ['name' => 'newsletters.send', 'display_name' => 'Send Newsletter'],
+                ['name' => 'newsletters.export', 'display_name' => 'Export Newsletters'],
+            ],
+
+            // ID = 14
+            'Transaction Management' => [
+                ['name' => 'transactions.view.any', 'display_name' => 'View All Transactions'],
+                ['name' => 'transactions.view', 'display_name' => 'View Transaction Details'],
+                ['name' => 'transactions.update.status', 'display_name' => 'Update Transaction Status'],
+                ['name' => 'transactions.refund', 'display_name' => 'Refund Transaction'],
+                ['name' => 'transactions.export', 'display_name' => 'Export Transactions'],
+            ],
+
+            // ID = 15
             'Order Management' => [
                 ['name' => 'orders.view.any', 'display_name' => 'View Orders'],
                 ['name' => 'orders.view', 'display_name' => 'View Order Details'],
                 ['name' => 'orders.update.status', 'display_name' => 'Update Order Status'],
                 ['name' => 'orders.cancel', 'display_name' => 'Cancel Order'],
                 ['name' => 'orders.invoice', 'display_name' => 'Generate Invoice'],
+                ['name' => 'orders.shipment', 'display_name' => 'Update Shipment'],
+                ['name' => 'orders.refund', 'display_name' => 'Process Refund'],
+                ['name' => 'orders.export', 'display_name' => 'Export Orders'],
             ],
 
-            // ID = 15
+            // ID = 16
+            'Coupon Management' => [
+                ['name' => 'coupons.view.any', 'display_name' => 'View All Coupons'],
+                ['name' => 'coupons.view', 'display_name' => 'View Coupon Details'],
+                ['name' => 'coupons.create', 'display_name' => 'Create Coupon'],
+                ['name' => 'coupons.update', 'display_name' => 'Update Coupon'],
+                ['name' => 'coupons.delete', 'display_name' => 'Delete Coupon'],
+                ['name' => 'coupons.update.status', 'display_name' => 'Update Coupon Status'],
+            ],
+
+            // ID = 17
             'Setting Management' => [
                 ['name' => 'settings.view', 'display_name' => 'View Settings'],
                 ['name' => 'settings.update', 'display_name' => 'Update Settings'],
+                ['name' => 'settings.email', 'display_name' => 'Email Settings'],
+                ['name' => 'settings.payment', 'display_name' => 'Payment Settings'],
+                ['name' => 'settings.shipping', 'display_name' => 'Shipping Settings'],
+                ['name' => 'settings.seo', 'display_name' => 'SEO Settings'],
             ],
 
-
-            // ID = 17
+            // ID = 18
             'Payment Management' => [
                 ['name' => 'payments.view.any', 'display_name' => 'View Payments'],
                 ['name' => 'payments.view', 'display_name' => 'View Payment Details'],
-                ['name' => 'payments.refund', 'display_name' => 'Refund Payment'],
+                ['name' => 'payments.export', 'display_name' => 'Export Payments'],
             ],
 
+            // ID = 19
+            'Report Management' => [
+                ['name' => 'reports.sales', 'display_name' => 'Sales Reports'],
+                ['name' => 'reports.products', 'display_name' => 'Product Reports'],
+                ['name' => 'reports.customers', 'display_name' => 'Customer Reports'],
+                ['name' => 'reports.orders', 'display_name' => 'Order Reports'],
+                ['name' => 'reports.revenue', 'display_name' => 'Revenue Reports'],
+                ['name' => 'reports.export', 'display_name' => 'Export Reports'],
+            ],
 
-
-
-            // ID = 18
+            // ID = 20
             'Global Search Management' => [
                 ['name' => 'global.search', 'display_name' => 'Global Search'],
             ],
+
+
         ];
 
         /**

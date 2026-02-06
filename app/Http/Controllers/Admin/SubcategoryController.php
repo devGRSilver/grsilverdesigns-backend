@@ -71,10 +71,7 @@ class SubcategoryController extends ResponseController
         } catch (\Exception $e) {
             Log::error('SubCategory store failed: ' . $e->getMessage());
 
-            return $this->errorResponse(
-                "Failed to create {$this->resourceName}.",
-                500
-            );
+            return $this->errorResponse($e->getMessage(), 500);
         }
     }
 

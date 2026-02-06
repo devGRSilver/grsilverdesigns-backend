@@ -112,13 +112,13 @@ class OrderService
 
             // Status - make interactive if user can update status
             $statusHtml = view_order_status($order->status ?? 'unknown');
-            if ($canUpdateStatus) {
-                $statusHtml = status_dropdown($order->status, [
-                    'id'     => $order->id,
-                    'url'    => route('orders.status', encrypt($order->id)),
-                    'method' => 'PUT',
-                ]);
-            }
+            // if ($canUpdateStatus) {
+            //     $statusHtml = status_dropdown($order->status, [
+            //         'id'     => $order->id,
+            //         'url'    => route('orders.status', encrypt($order->id)),
+            //         'method' => 'PUT',
+            //     ]);
+            // }
 
             // Action buttons
             $actionButtons = [];
@@ -151,7 +151,7 @@ class OrderService
                 'order_number' => $orderNumberHtml,
                 'customer'     => $customerHtml,
                 'items_count'  => $order->items_count,
-                'amount'       => number_format($order->grand_total ?? 0, 2) . ' ' . strtoupper($order->currency_code ?? 'INR'),
+                'amount'       => number_format($order->grand_total ?? 0, 2) . ' ' . strtoupper($order->currency_code ?? '$'),
                 'status'       => $statusHtml,
                 'rating'       => view_rating($order->rating ?? 0), // Replace with actual rating
                 'created_at'   => $order->created_at?->format('d M Y') ?? '—',
@@ -172,7 +172,7 @@ class OrderService
      **********************************************/
     public function findById(int $id): Order
     {
-        return Order::with(['user', 'items', 'addresses'])->findOrFail($id);
+        return Order::with(['user', 'items', 'shipping_address', 'billing_address'])->findOrFail($id);
     }
 
     /**********************************************

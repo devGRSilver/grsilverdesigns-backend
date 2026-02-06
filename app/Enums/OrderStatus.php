@@ -14,9 +14,9 @@ enum OrderStatus: string
     case DELIVERED         = 'delivered';
     case CANCEL_REQUESTED  = 'cancel_requested';
     case CANCELLED         = 'cancelled';
-    // case RETURN_REQUESTED  = 'return_requested';
-    // case RETURN_APPROVED   = 'return_approved';
-    // case RETURNED          = 'returned';
-    // case REFUNDED          = 'refunded';
-    // case FAILED            = 'failed';
+        // case RETURN_REQUESTED  = 'return_requested';
+        // case RETURN_APPROVED   = 'return_approved';
+        // case RETURNED          = 'returned';
+        // case REFUNDED          = 'refunded';
+    case FAILED            = 'failed';
 }

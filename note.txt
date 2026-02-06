@@ -18,6 +18,76 @@
 1.  User Details make dynamic Query   :  Pending 
 2.  Dashbaord make dynamic Query      :  Pending         
 11. Notification Page  : 
-12. Discount Module  
-13. 
+12. Discount Module  : 
+13. Order Details page  make dynamic :
+14. Tracking Details update form 
+15.   
+
+==============================
+
+
+9326186404
+
+Third party Apis me konsi apis me kya plan puchrage 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+✔️ Voice Call API — pay-as-you-go (per 1,000 minutes)
+✔️ Video Call API — pay-as-you-go (per 1,000 minutes)
+✔️ Live Streaming API — pay-as-you-go (per 1,000 minutes)
+
+
+📍 2) In-App Chat (Monthly Plans)
+
+
+
+
+=============================================
+
+
+
+For Web :  
+AppID  :  1288298857
+ServerSecret  :     c1f42ffa250d1efca5e739cd032fd8e1
+
+
+
+
+
+For App Video and A
+Flutter App for flutter App : 
+AppID  :  1288298857
+AppSign  :  50e071a896cfe05e0149164b12e36265056cd534a99223f9f5796729b78a4507
+
+
+==========================================================================
+For App Chat : 
+Project name : InAppChat
+AppID :  867827787
+AppSign :  744e7d1dc7d3111e462c4d124802c8513cb170b34f1f844b4ba7752a272f2098
+ServerSecret :  faaf163d38210b4eac2f36e648e33a09
+CallbackSecret : 744e7d1dc7d3111e462c4d124802c851
+
+=======================================================================
+
+For App Live streaming : 
+AppID    :  1537252170
+AppSign  :  c436f02bcbbb4fa1eabc676608b81836b009f26dfbbdbe6bb6ccb3fbf402d9e5
+
+
+
 

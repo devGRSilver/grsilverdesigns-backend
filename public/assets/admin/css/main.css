@@ -2472,6 +2472,10 @@ textarea:focus {
   background-color: var(--color-pink) !important;
 }
 
+.mt-29 {
+    margin-top: 29px;
+}
+
 .gray-bg {
   background-color: var(--gray-3) !important;
 }
@@ -2481,7 +2485,7 @@ textarea:focus {
 }
 
 .bg-light {
-  background-color: var(--color-light) !important;
+  background-color: rgb(240, 240, 240) !important;
 }
 
 .bg-dark {

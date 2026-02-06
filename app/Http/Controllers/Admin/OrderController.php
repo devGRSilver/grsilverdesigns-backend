@@ -58,6 +58,7 @@ class OrderController extends ResponseController
     public function show(string $encryptedId)
     {
         try {
+
             $id = decrypt($encryptedId);
             $order = $this->orderService->findById($id);
 
@@ -66,6 +67,8 @@ class OrderController extends ResponseController
                 'order' => $order,
             ]);
         } catch (\Exception $e) {
+            dd($e);
+
             Log::error('Order show failed: ' . $e->getMessage());
 
             return redirect()
@@ -96,8 +99,8 @@ class OrderController extends ResponseController
     // }
 
     /**
- * Edit Order Form
- */
+     * Edit Order Form
+     */
     // public function edit(string $encryptedId)
     // {
     //     try {
@@ -115,8 +118,8 @@ class OrderController extends ResponseController
     // }
 
     /**
- * Update Order
- */
+     * Update Order
+     */
     // public function update(Request $request, string $encryptedId)
     // {
     //     try {
@@ -135,8 +138,8 @@ class OrderController extends ResponseController
     // }
 
     /**
- * Update Order Status
- */
+     * Update Order Status
+     */
     // public function updateStatus(Request $request, string $encryptedId)
     // {
     //     try {
@@ -153,8 +156,8 @@ class OrderController extends ResponseController
     // }
 
     /**
- * Delete Order
- */
+     * Delete Order
+     */
     // public function delete(string $encryptedId)
     // {
     //     try {

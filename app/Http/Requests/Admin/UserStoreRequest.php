@@ -19,8 +19,6 @@ class UserStoreRequest extends FormRequest
     {
         $encrypted = $this->route('id');
 
-
-
         if (!$encrypted) {
             return null;
         }
@@ -35,26 +33,54 @@ class UserStoreRequest extends FormRequest
     public function rules(): array
     {
         $userId = $this->getDecryptedUserId();
+        $isEdit = !is_null($userId);
 
-        return [
+        $rules = [
             'name' => 'required|string|max:100',
 
             'email' => [
                 'required',
                 'email:rfc,dns',
                 'max:100',
-                Rule::unique('users', 'email')->ignore($userId),
+                Rule::unique('users', 'email')
+                    ->ignore($userId)
+                    ->whereNull('deleted_at'),
             ],
 
             'phone' => [
                 'required',
                 'string',
                 'max:20',
-                Rule::unique('users', 'phone')->ignore($userId),
+                Rule::unique('users', 'phone')
+                    ->ignore($userId)
+                    ->whereNull('deleted_at'),
             ],
 
             'status' => 'sometimes|boolean',
         ];
+
+        // Password rules: required only for create, optional for edit
+        if (!$isEdit) {
+            // Create operation - password required
+            $rules['password'] = [
+                'required',
+                'string',
+                'min:8',
+                'confirmed',
+            ];
+            $rules['password_confirmation'] = 'required|string|min:8';
+        } else {
+            // Edit operation - password optional
+            $rules['password'] = [
+                'nullable',
+                'string',
+                'min:8',
+                'confirmed',
+            ];
+            $rules['password_confirmation'] = 'nullable|string|min:8';
+        }
+
+        return $rules;
     }
 
     public function messages(): array
@@ -73,6 +99,13 @@ class UserStoreRequest extends FormRequest
             'phone.unique' => 'This phone number is already in use.',
 
             'status.boolean' => 'Status must be true or false.',
+
+            'password.required' => 'Password is required.',
+            'password.min' => 'Password must be at least 8 characters.',
+            'password.confirmed' => 'Password confirmation does not match.',
+
+            'password_confirmation.required' => 'Password confirmation is required.',
+            'password_confirmation.min' => 'Password confirmation must be at least 8 characters.',
         ];
     }
 }

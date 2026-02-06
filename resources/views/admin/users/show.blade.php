@@ -5,21 +5,35 @@
         <div class="app-content-wrap">
             <div class="container-fluid">
                 {{-- Page Header --}}
-                <div class="row mb-4">
-                    <div class="col-12">
-                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
-                            <div>
-                                <h1 class="fs-24 mb-2 fw-bold">{{ $data->name }}</h1>
-                                <ol class="breadcrumb mb-0">
-                                    <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-                                    <li class="breadcrumb-item"><a href="{{ route('users.index') }}">Users</a></li>
-                                    <li class="breadcrumb-item active">User Details</li>
-                                </ol>
-                            </div>
 
+
+
+
+                <!-- Page Header -->
+                <div class="row mb-3">
+                    <div class="col-xl-12">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <h1 class="fs-18 mb-0">{{ $title ?? 'Users' }}</h1>
+                            <nav aria-label="breadcrumb">
+                                <ol class="breadcrumb breadcrumb-example1 mb-0">
+                                    <li class="breadcrumb-item">
+                                        <a href="{{ route('admin.dashboard') }}">Home</a>
+                                    </li>
+
+                                    <li class="breadcrumb-item">
+                                        <a href="{{ route('users.index') }}">Users </a>
+                                    </li>
+
+
+                                    <li class="breadcrumb-item active">Details </li>
+                                </ol>
+                            </nav>
                         </div>
                     </div>
                 </div>
+
+
+
 
                 <div class="row">
                     {{-- Left Sidebar: User Profile Card --}}
@@ -530,7 +544,7 @@
     <script>
         $(document).ready(function() {
             const userId = '{{ $data->id }}';
-            const currency = '{{ $data->currency ?? 'INR' }}';
+            const currency = '{{ $data->currency ?? '$' }}';
             const csrfToken = $('meta[name="csrf-token"]').attr('content');
 
             // Initialize DataTables

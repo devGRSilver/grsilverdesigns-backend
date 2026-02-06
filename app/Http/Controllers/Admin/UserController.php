@@ -58,8 +58,7 @@ class UserController extends ResponseController
             $stats = $this->userService->getStats($request->all());
             return $this->successResponse($stats, 'Statistics loaded successfully');
         } catch (Exception $e) {
-            dd($e);
-            return $this->errorResponse('Failed to load statistics', 500);
+            return $this->errorResponse($e->getMessage(), 500);
         }
     }
 
@@ -111,10 +110,7 @@ class UserController extends ResponseController
                 "{$this->resourceName} created successfully."
             );
         } catch (\Exception $e) {
-            return $this->errorResponse(
-                "Failed to create {$this->resourceName}.",
-                500
-            );
+            return $this->errorResponse($e->getMessage(), 500);
         }
     }
 

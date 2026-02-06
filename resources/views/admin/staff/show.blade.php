@@ -1,505 +1,402 @@
 @extends('layouts.admin')
+
 @section('content')
     <div class="app-content-area">
         <div class="app-content-wrap">
             <div class="container-fluid">
+                {{-- Page Header --}}
+
+
+
 
                 <!-- Page Header -->
-                <div class="row">
+                <div class="row mb-3">
                     <div class="col-xl-12">
-                        <div class="page-title-box d-flex-between flex-wrap gap-15 align-items-center">
-
-                            <h1 class="page-title fs-18 lh-1 mb-0">
-                                {{ $title ?? 'Users' }}
-                            </h1>
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <h1 class="fs-18 mb-0">{{ $title ?? 'Users' }}</h1>
                             <nav aria-label="breadcrumb">
                                 <ol class="breadcrumb breadcrumb-example1 mb-0">
-                                    <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Home</a></li>
-                                    <li class="breadcrumb-item"><a href="{{ route('staff.index') }}">User</a></li>
-                                    <li class="breadcrumb-item active" aria-current="page">User Account</li>
+                                    <li class="breadcrumb-item">
+                                        <a href="{{ route('admin.dashboard') }}">Home</a>
+                                    </li>
+
+                                    <li class="breadcrumb-item">
+                                        <a href="{{ route('staff.index') }}">Staff </a>
+                                    </li>
+
+
+                                    <li class="breadcrumb-item active">Details </li>
                                 </ol>
                             </nav>
                         </div>
                     </div>
                 </div>
 
+
+
+
                 <div class="row">
-                    <div class="col-xl-12">
-                        <div class="customer-nav mb-25 mobile-nav">
-                            <ul class="d-flex-items gap-10">
-                                <li class="active"><a class="btn btn-primary"
-                                        href="{{ route('staff.show', encrypt($data->id)) }}">User Info</a>
-                                </li>
-                                <li class=""><a class="btn btn-light modal_open"
-                                        href="{{ route('staff.password.edit', encrypt($data->id)) }}"> Change Password
-                                    </a></li>
-                                <li class=""><a class="btn btn-light modal_open"
-                                        href="{{ route('staff.edit', encrypt($data->id)) }}">Edit User </a>
-                                </li>
-
-                                {{-- <li class=""><a class="btn btn-light delete_record"
-                                        href="{{ route('staff.delete', encrypt($data->id)) }}">Delete User </a>
-                                </li> --}}
-
-                                <li class="">
-                                    {!! status_dropdown($data->status, [
-                                        'id' => $data->id,
-                                        'url' => route('staff.status', encrypt($data->id)),
-                                        'method' => 'PUT',
-                                    ]) !!}
-                                </li>
-
-
-
-
-                            </ul>
-                        </div>
-                    </div>
-                    <div class="col-xl-4">
-                        <div class="card">
-                            <div class="card-header justify-between">
-                                <h4 class="">Personal Information</h4>
-                                <div class="card-dropdown">
-                                    <div class="dropdown">
-                                        <a class="card-dropdown-icon" href="javascript:void(0);" role="button"
-                                            data-bs-toggle="dropdown" aria-expanded="false">
-                                            <i class="ri-more-2-fill"></i>
-                                        </a>
-                                        <div class="dropdown-menu">
-                                            <a class="dropdown-item modal_open"
-                                                href="{{ route('staff.edit', encrypt($data->id)) }}">Edit</a>
-                                            <a class="dropdown-item modal_open"
-                                                href="{{ route('staff.password.edit', encrypt($data->id)) }}">Change
-                                                Password </a>
-
-                                            <a class="dropdown-item delete_record"
-                                                href="{{ route('staff.delete', encrypt($data->id)) }}">Delete User </a>
-                                        </div>
-                                    </div>
+                    {{-- Left Sidebar: User Profile Card --}}
+                    <div class="col-xl-3 col-lg-4 mb-4">
+                        <div class="card border-0 shadow-sm sticky-top">
+                            {{-- Profile Header --}}
+                            <div class="card-body text-center border-bottom py-4">
+                                <div class="position-relative d-inline-block mb-3">
+                                    <img src="{{ $data->profile_picture ?? URL::asset('default_images/no_user.png') }}"
+                                        class="rounded-circle border border-3 border-white shadow" alt="{{ $data->name }}"
+                                        style="width: 120px; height: 120px; object-fit: cover;"
+                                        onerror="this.src='{{ URL::asset('default_images/no_user.png') }}'">
+                                    @php
+                                        $statusColors = [
+                                            'active' => 'success',
+                                            'inactive' => 'danger',
+                                            'pending' => 'warning',
+                                            'suspended' => 'secondary',
+                                        ];
+                                        $statusColor = $statusColors[$data->status] ?? 'secondary';
+                                    @endphp
+                                    <span
+                                        class="position-absolute bottom-0 end-0 p-2 bg-{{ $statusColor }} border border-3 border-white rounded-circle"
+                                        title="{{ ucfirst($data->status) }}" style="width: 20px; height: 20px;">
+                                    </span>
                                 </div>
+                                <h4 class="mb-2 fw-bold">{{ $data->name }}</h4>
+                                <p class="text-muted mb-3 small">{{ $data->email }}</p>
+                                <span class="badge bg-{{ $statusColor }}-subtle text-{{ $statusColor }} px-3 py-2">
+                                    {{ ucfirst($data->status) }}
+                                </span>
                             </div>
 
-                            <div class="card-body pt-15">
-                                <div class="text-center mb-10">
-                                    <div class="avatar avatar-big radius-100">
-                                        <img class="radius-100" src="{{ $data->profile_picture }}" alt="image not found">
-                                    </div>
-                                </div>
-                                <div class="profile-info text-center mb-15">
-                                    <h3 class="mb-5">{{ $data->name }}</h3>
-                                    <h6 class="text-body mb-10">User ID: # {{ $data->id }}</h6>
-                                    <div class="d-flex-center gap-15">
-                                        <a href="javascript:void(0);" class="btn-icon btn-warning-light fs-16">
-                                            <i class="ri-twitter-x-line"></i>
-                                        </a><a href="javascript:void(0);" class="btn-icon btn-success-light fs-16">
-                                            <i class="ri-facebook-fill"></i>
-                                        </a>
-                                        <a href="javascript:void(0);" class="btn-icon btn-info-light fs-16">
-                                            <i class="ri-linkedin-fill"></i>
-                                        </a>
-                                        <a href="javascript:void(0);" class="btn-icon btn-danger-light fs-16">
-                                            <i class="ri-whatsapp-line"></i>
-                                        </a>
-                                        <a href="javascript:void(0);" class="btn-icon btn-primary-light fs-16">
-                                            <i class="ri-telegram-2-fill"></i>
-                                        </a>
-                                    </div>
-                                </div>
-                                <div class="table-responsive">
-                                    <table class="table">
-                                        <tbody>
-                                            <tr>
-                                                <td>Name</td>
-                                                <td>
-                                                    <div class="text-heading">{{ $data->name ?? '' }}</div>
-                                                </td>
-                                            </tr>
-
-                                            <tr>
-                                                <td>Phone</td>
-                                                <td>
-                                                    <div class="text-heading">{{ $data->phone_code }} {{ $data->phone }}
+                            {{-- Quick Info --}}
+                            <div class="card-body py-4">
+                                <h6 class="text-uppercase text-muted fw-bold mb-3"
+                                    style="font-size: 11px; letter-spacing: 0.5px;">
+                                    Account Information
+                                </h6>
+                                <ul class="list-unstyled mb-0">
+                                    <li class="mb-3 pb-3 border-bottom">
+                                        <div class="d-flex align-items-center">
+                                            <div class="flex-shrink-0">
+                                                <div class="avatar avatar-sm bg-primary-subtle text-primary rounded">
+                                                    <i class="ri-hashtag"></i>
+                                                </div>
+                                            </div>
+                                            <div class="flex-grow-1 ms-3">
+                                                <p class="text-muted mb-0" style="font-size: 12px;">User ID</p>
+                                                <p class="mb-0 fw-semibold">#{{ $data->id }}</p>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li class="mb-3 pb-3 border-bottom">
+                                        <div class="d-flex align-items-center">
+                                            <div class="flex-shrink-0">
+                                                <div class="avatar avatar-sm bg-success-subtle text-success rounded">
+                                                    <i class="ri-phone-line"></i>
+                                                </div>
+                                            </div>
+                                            <div class="flex-grow-1 ms-3">
+                                                <p class="text-muted mb-0" style="font-size: 12px;">Phone</p>
+                                                <p class="mb-0 fw-semibold">
+                                                    {{ $data->phone_code && $data->phone ? $data->phone_code . ' ' . $data->phone : 'N/A' }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li class="mb-3 pb-3 border-bottom">
+                                        <div class="d-flex align-items-center">
+                                            <div class="flex-shrink-0">
+                                                <div class="avatar avatar-sm bg-info-subtle text-info rounded">
+                                                    <i class="ri-global-line"></i>
+                                                </div>
+                                            </div>
+                                            <div class="flex-grow-1 ms-3">
+                                                <p class="text-muted mb-0" style="font-size: 12px;">Timezone</p>
+                                                <p class="mb-0 fw-semibold">{{ $data->timezone ?? 'UTC' }}</p>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li class="mb-3 pb-3 border-bottom">
+                                        <div class="d-flex align-items-center">
+                                            <div class="flex-shrink-0">
+                                                <div class="avatar avatar-sm bg-warning-subtle text-warning rounded">
+                                                    <i class="ri-calendar-line"></i>
+                                                </div>
+                                            </div>
+                                            <div class="flex-grow-1 ms-3">
+                                                <p class="text-muted mb-0" style="font-size: 12px;">Joined</p>
+                                                <p class="mb-0 fw-semibold">{{ $data->created_at->format('M d, Y') }}</p>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li class="mb-3 pb-3 border-bottom">
+                                        <div class="d-flex align-items-center">
+                                            <div class="flex-shrink-0">
+                                                <div class="avatar avatar-sm bg-danger-subtle text-danger rounded">
+                                                    <i class="ri-time-line"></i>
+                                                </div>
+                                            </div>
+                                            <div class="flex-grow-1 ms-3">
+                                                <p class="text-muted mb-0" style="font-size: 12px;">Last Login</p>
+                                                <p class="mb-0 fw-semibold">
+                                                    {{ $data->last_login_at ? $data->last_login_at->diffForHumans() : 'Never' }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    @if ($data->ip_address)
+                                        <li>
+                                            <div class="d-flex align-items-center">
+                                                <div class="flex-shrink-0">
+                                                    <div
+                                                        class="avatar avatar-sm bg-secondary-subtle text-secondary rounded">
+                                                        <i class="ri-map-pin-line"></i>
                                                     </div>
-                                                </td>
-                                            </tr>
+                                                </div>
+                                                <div class="flex-grow-1 ms-3">
+                                                    <p class="text-muted mb-0" style="font-size: 12px;">IP Address</p>
+                                                    <p class="mb-0 fw-semibold">{{ $data->ip_address }}</p>
+                                                </div>
+                                            </div>
+                                        </li>
+                                    @endif
+                                </ul>
+                            </div>
 
-                                            <tr>
-                                                <td>Email</td>
-                                                <td>
-                                                    <div class="text-heading">{{ $data->email }}</div>
-                                                </td>
-                                            </tr>
-
-                                            <tr>
-                                                <td>Timezone</td>
-                                                <td>
-                                                    <div class="text-heading">{{ $data->timezone }}</div>
-                                                </td>
-                                            </tr>
-
-                                            <tr>
-                                                <td>Created Date</td>
-                                                <td>
-                                                    <div class="text-heading">{{ $data->created_at }}</div>
-                                                </td>
-                                            </tr>
-
-                                            <tr>
-                                                <td>Currency</td>
-                                                <td>
-                                                    <div class="badge bg-label-success">{{ $data->currency ?? '-' }}</div>
-                                                </td>
-                                            </tr>
-
-                                            <tr>
-                                                <td>Last Login At</td>
-                                                <td>
-                                                    <div class="badge bg-label-success">{{ $data->last_login_at ?? '-' }}
-                                                    </div>
-                                                </td>
-                                            </tr>
-
-                                            <tr>
-                                                <td>IP Address</td>
-                                                <td>
-                                                    <div class="badge bg-label-success">{{ $data->ip_address ?? '-' }}
-                                                    </div>
-                                                </td>
-                                            </tr>
-
-                                            <!-- New: User Active Status -->
-                                            <tr>
-                                                <td>Status</td>
-                                                <td>
-                                                    {!! status_dropdown($data->status, [
-                                                        'id' => $data->id,
-                                                        'url' => route('staff.status', encrypt($data->id)),
-                                                        'method' => 'PUT',
-                                                    ]) !!}
-
-                                                </td>
-
-                                            </tr>
-                                        </tbody>
-                                    </table>
-
+                            {{-- Quick Actions --}}
+                            <div class="card-body border-top py-4">
+                                <h6 class="text-uppercase text-muted fw-bold mb-3"
+                                    style="font-size: 11px; letter-spacing: 0.5px;">
+                                    Quick Actions
+                                </h6>
+                                <div class="d-grid gap-2">
+                                    @can('users.update')
+                                        <button href="{{ route('users.edit', encrypt($data->id)) }}"
+                                            class="btn btn-outline-primary btn-sm modal_open">
+                                            <i class="ri-edit-line me-1"></i> Edit Profile
+                                        </button>
+                                    @endcan
+                                    <a href="mailto:{{ $data->email }}" class="btn btn-outline-secondary btn-sm">
+                                        <i class="ri-mail-line me-1"></i> Send Email
+                                    </a>
+                                    <a href="{{ route('users.password.edit', encrypt($data->id)) }}"
+                                        class="btn btn-outline-info btn-sm modal_open">
+                                        <i class="ri-shopping-bag-line me-1"></i> Reset Password
+                                    </a>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="col-xl-8">
-                        <div class="row">
-                            <div class="col-xl-6 col-lg-3 col-md-6">
-                                <div class="card">
-                                    <div class="card-body mini-card-body d-flex align-center gap-16">
-                                        <div class="avatar avatar-xl bg-primary-transparent text-primary">
-                                            <i class="ri-shopping-bag-3-line fs-42"></i>
+                    {{-- Main Content: Stats & Tabs --}}
+                    <div class="col-xl-9 col-lg-8">
+                        {{-- Stats Cards --}}
+                        <div class="row g-3 mb-4" id="stats-wrapper">
+                            <div class="col-xl-3 col-md-6">
+                                <div class="card border-0 shadow-sm h-100">
+                                    <div class="card-body p-4">
+                                        <div class="d-flex justify-content-between align-items-start mb-3">
+                                            <div>
+                                                <p class="text-muted mb-2" style="font-size: 13px;">Total Orders</p>
+                                                <h3 class="mb-0 fw-bold" id="stat-total-orders">
+                                                    <span class="placeholder col-6 placeholder-wave"></span>
+                                                </h3>
+                                            </div>
+                                            <div class="avatar avatar-md bg-primary-subtle text-primary rounded-3">
+                                                <i class="ri-shopping-bag-3-line fs-20"></i>
+                                            </div>
                                         </div>
-                                        <div class="card-content">
-                                            <span class="d-block fs-16 mb-5">Total Orders</span>
-                                            <h2 class="mb-5">98.5k</h2>
-                                            <span class="text-success">+1.24%<i
-                                                    class="ri-arrow-up-line ml-5 d-inline-block"></i></span>
-                                            <span class="fs-12 text-muted ml-5">This week</span>
-                                        </div>
+                                        <a href="{{ route('orders.index') }}?user_id={{ $data->id }}"
+                                            class="text-primary text-decoration-none small d-flex align-items-center">
+                                            View Details <i class="ri-arrow-right-line ms-1"></i>
+                                        </a>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-xl-6 col-lg-3 col-md-6">
-                                <div class="card">
-                                    <div class="card-body mini-card-body d-flex align-center gap-16">
-                                        <div class="avatar avatar-xl bg-warning-transparent text-warning">
-                                            <i class="ri-time-line fs-42"></i>
+
+                            <div class="col-xl-3 col-md-6">
+                                <div class="card border-0 shadow-sm h-100">
+                                    <div class="card-body p-4">
+                                        <div class="d-flex justify-content-between align-items-start mb-3">
+                                            <div>
+                                                <p class="text-muted mb-2" style="font-size: 13px;">Processing</p>
+                                                <h3 class="mb-0 fw-bold" id="stat-processing">
+                                                    <span class="placeholder col-6 placeholder-wave"></span>
+                                                </h3>
+                                            </div>
+                                            <div class="avatar avatar-md bg-warning-subtle text-warning rounded-3">
+                                                <i class="ri-loader-4-line fs-20"></i>
+                                            </div>
                                         </div>
-                                        <div class="card-content">
-                                            <span class="d-block fs-16 mb-5">Pending Orders</span>
-                                            <h2 class="mb-5">12</h2>
-                                            <span class="text-warning">+2 pending<i
-                                                    class="ri-arrow-up-line ml-5 d-inline-block"></i></span>
-                                            <span class="fs-12 text-muted ml-5">In Dispatch</span>
-                                        </div>
+                                        <a href="{{ route('orders.index') }}?user_id={{ $data->id }}&status=processing"
+                                            class="text-warning text-decoration-none small d-flex align-items-center">
+                                            View Orders <i class="ri-arrow-right-line ms-1"></i>
+                                        </a>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-xl-6 col-lg-3 col-md-6">
-                                <div class="card">
-                                    <div class="card-body mini-card-body d-flex align-center gap-16">
-                                        <div class="avatar avatar-xl bg-success-transparent text-success">
-                                            <i class="ri-checkbox-circle-line fs-42"></i>
+
+                            <div class="col-xl-3 col-md-6">
+                                <div class="card border-0 shadow-sm h-100">
+                                    <div class="card-body p-4">
+                                        <div class="d-flex justify-content-between align-items-start mb-3">
+                                            <div>
+                                                <p class="text-muted mb-2" style="font-size: 13px;">Completed</p>
+                                                <h3 class="mb-0 fw-bold" id="stat-completed">
+                                                    <span class="placeholder col-6 placeholder-wave"></span>
+                                                </h3>
+                                            </div>
+                                            <div class="avatar avatar-md bg-success-subtle text-success rounded-3">
+                                                <i class="ri-check-double-line fs-20"></i>
+                                            </div>
                                         </div>
-                                        <div class="card-content">
-                                            <span class="d-block fs-16 mb-5">Completed Orders</span>
-                                            <h2 class="mb-5">86</h2>
-                                            <span class="text-success">+8.5%<i
-                                                    class="ri-arrow-up-line ml-5 d-inline-block"></i></span>
-                                            <span class="fs-12 text-muted ml-5">This month</span>
-                                        </div>
+                                        <a href="{{ route('orders.index') }}?user_id={{ $data->id }}&status=delivered"
+                                            class="text-success text-decoration-none small d-flex align-items-center">
+                                            View Orders <i class="ri-arrow-right-line ms-1"></i>
+                                        </a>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-xl-6 col-lg-3 col-md-6">
-                                <div class="card">
-                                    <div class="card-body mini-card-body d-flex align-center gap-16">
-                                        <div class="avatar avatar-xl bg-purple-transparent text-purple">
-                                            <i class="ri-money-dollar-circle-line fs-42"></i>
+
+                            <div class="col-xl-3 col-md-6">
+                                <div class="card border-0 shadow-sm h-100">
+                                    <div class="card-body p-4">
+                                        <div class="d-flex justify-content-between align-items-start mb-3">
+                                            <div>
+                                                <p class="text-muted mb-2" style="font-size: 13px;">Total Spent</p>
+                                                <h3 class="mb-0 fw-bold" id="stat-total-spent">
+                                                    <span class="placeholder col-8 placeholder-wave"></span>
+                                                </h3>
+                                            </div>
+                                            <div class="avatar avatar-md bg-info-subtle text-info rounded-3">
+                                                <i class="ri-money-dollar-circle-line fs-20"></i>
+                                            </div>
                                         </div>
-                                        <div class="card-content">
-                                            <span class="d-block fs-16 mb-5">Total Spent</span>
-                                            <h2 class="mb-5">$12,450</h2>
-                                            <span class="text-success">+15%<i
-                                                    class="ri-arrow-up-line ml-5 d-inline-block"></i></span>
-                                            <span class="fs-12 text-muted ml-5">vs last year</span>
-                                        </div>
+                                        <p class="text-muted mb-0 small">Lifetime value</p>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-xl-12">
-                                <div class="card">
-                                    <div class="card-header justify-between">
-                                        <h4>Order List</h4>
+                        </div>
+
+                        {{-- Navigation Tabs --}}
+                        <div class="card border-0 shadow-sm mb-4">
+                            <div class="card-body p-0">
+                                <ul class="nav nav-pills nav-justified mb-0" id="userDetailTabs" role="tablist">
+                                    <li class="nav-item" role="presentation">
+                                        <button
+                                            class="nav-link active rounded-0 border-bottom border-3 border-primary py-3"
+                                            id="orders-tab" data-bs-toggle="tab" data-bs-target="#orders" type="button"
+                                            role="tab">
+                                            <i class="ri-shopping-bag-line me-2"></i>
+                                            <span class="d-none d-sm-inline">Orders</span>
+                                        </button>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link rounded-0 border-bottom border-3 border-transparent py-3"
+                                            id="transactions-tab" data-bs-toggle="tab" data-bs-target="#transactions"
+                                            type="button" role="tab">
+                                            <i class="ri-exchange-dollar-line me-2"></i>
+                                            <span class="d-none d-sm-inline">Transactions</span>
+                                        </button>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link rounded-0 border-bottom border-3 border-transparent py-3"
+                                            id="activity-tab" data-bs-toggle="tab" data-bs-target="#activity"
+                                            type="button" role="tab">
+                                            <i class="ri-history-line me-2"></i>
+                                            <span class="d-none d-sm-inline">Activity</span>
+                                        </button>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        {{-- Tab Content --}}
+                        <div class="tab-content" id="userDetailTabsContent">
+                            {{-- Orders Tab --}}
+                            <div class="tab-pane fade show active" id="orders" role="tabpanel">
+                                <div class="card border-0 shadow-sm">
+                                    <div class="card-header bg-white border-bottom py-3">
+                                        <h5 class="mb-0 fw-bold">All Orders</h5>
                                     </div>
-                                    <div class="card-body pt-15">
+                                    <div class="card-body p-4">
                                         <div class="table-responsive">
-                                            <div id="dataTableDefault_wrapper"
-                                                class="dataTables_wrapper dt-bootstrap5 no-footer">
-                                                <div class="row">
-                                                    <div class="col-sm-12 col-md-6">
-                                                        <div class="dataTables_length" id="dataTableDefault_length">
-                                                            <label>Show <select name="dataTableDefault_length"
-                                                                    aria-controls="dataTableDefault"
-                                                                    class="form-select form-select-sm">
-                                                                    <option value="10">10</option>
-                                                                    <option value="25">25</option>
-                                                                    <option value="50">50</option>
-                                                                    <option value="100">100</option>
-                                                                </select> entries</label>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-sm-12 col-md-6">
-                                                        <div id="dataTableDefault_filter" class="dataTables_filter">
-                                                            <label>Search:<input type="search"
-                                                                    class="form-control form-control-sm" placeholder=""
-                                                                    aria-controls="dataTableDefault"></label>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="row">
-                                                    <div class="col-sm-12">
-                                                        <table id="dataTableDefault"
-                                                            class="table text-nowrap w-100 dataTable no-footer"
-                                                            aria-describedby="dataTableDefault_info">
-                                                            <thead>
-                                                                <tr>
-                                                                    <th class="sorting_disabled sorting_asc"
-                                                                        rowspan="1" colspan="1"
-                                                                        aria-label="Order ID" style="width: 81px;">Order
-                                                                        ID</th>
-                                                                    <th class="sorting" tabindex="0"
-                                                                        aria-controls="dataTableDefault" rowspan="1"
-                                                                        colspan="1"
-                                                                        aria-label="Order Date: activate to sort column ascending"
-                                                                        style="width: 108.203px;">Order Date</th>
-                                                                    <th class="sorting" tabindex="0"
-                                                                        aria-controls="dataTableDefault" rowspan="1"
-                                                                        colspan="1"
-                                                                        aria-label="Delivery Date: activate to sort column ascending"
-                                                                        style="width: 130.125px;">Delivery Date</th>
-                                                                    <th class="sorting" tabindex="0"
-                                                                        aria-controls="dataTableDefault" rowspan="1"
-                                                                        colspan="1"
-                                                                        aria-label="Payment Status: activate to sort column ascending"
-                                                                        style="width: 148.281px;">Payment Status</th>
-                                                                    <th class="sorting" tabindex="0"
-                                                                        aria-controls="dataTableDefault" rowspan="1"
-                                                                        colspan="1"
-                                                                        aria-label="Order Status: activate to sort column ascending"
-                                                                        style="width: 122.625px;">Order Status</th>
-                                                                    <th class="sorting" tabindex="0"
-                                                                        aria-controls="dataTableDefault" rowspan="1"
-                                                                        colspan="1"
-                                                                        aria-label="Total Spent: activate to sort column ascending"
-                                                                        style="width: 111.406px;">Total Spent</th>
-                                                                    <th class="sorting" tabindex="0"
-                                                                        aria-controls="dataTableDefault" rowspan="1"
-                                                                        colspan="1"
-                                                                        aria-label="Action: activate to sort column ascending"
-                                                                        style="width: 71.3438px;">Action</th>
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody>
+                                            <table class="table table-hover" id="ordersTable">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th>Order ID</th>
+                                                        <th>Customer</th>
+                                                        <th>Items</th>
+                                                        <th>Amount</th>
+                                                        <th>Status</th>
+                                                        <th>Rating</th>
+                                                        <th>Created</th>
+                                                        <th>Action</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td colspan="7" class="text-center py-5">
+                                                            <div class="spinner-border text-primary" role="status">
+                                                                <span class="visually-hidden">Loading...</span>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 
+                            {{-- Transactions Tab --}}
+                            <div class="tab-pane fade" id="transactions" role="tabpanel">
+                                <div class="card border-0 shadow-sm">
+                                    <div class="card-header bg-white border-bottom py-3">
+                                        <h5 class="mb-0 fw-bold">Transaction History</h5>
+                                    </div>
+                                    <div class="card-body p-4">
+                                        <div class="table-responsive">
+                                            <table class="table table-hover" id="transactionsTable">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                    <tr>
+                                                        <th>#</th>
+                                                        <th>Transaction ID</th>
+                                                        <th>Order ID</th>
+                                                        <th>User</th>
+                                                        <th>Amount</th>
+                                                        <th>Status</th>
+                                                        <th>Created</th>
+                                                        <th>Action</th>
+                                                    </tr>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td colspan="8" class="text-center py-5">
+                                                            <div class="spinner-border text-primary" role="status">
+                                                                <span class="visually-hidden">Loading...</span>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 
-
-
-
-
-                                                                <tr class="odd">
-                                                                    <td class="sorting_1">#10025</td>
-                                                                    <td>Apr 25, 2025</td>
-                                                                    <td>Apr 29, 2025</td>
-                                                                    <td><span class="text-black fw-5">Credit Card</span>
-                                                                    </td>
-                                                                    <td><span class="badge bg-label-success">Paid</span>
-                                                                    </td>
-                                                                    <td>$129.99</td>
-                                                                    <td>
-                                                                        <div class="d-flex-items gap-5">
-                                                                            <a class="btn-icon btn-success-light"
-                                                                                href="ecommerce-order-details.html">
-                                                                                <i class="ri-eye-line"></i>
-                                                                            </a>
-                                                                            <button
-                                                                                class="btn-icon btn-danger-light removeRow"
-                                                                                type="button">
-                                                                                <i class="ri-delete-bin-line"></i>
-                                                                            </button>
-                                                                        </div>
-                                                                    </td>
-                                                                </tr>
-                                                                <tr class="even">
-                                                                    <td class="sorting_1">#10026</td>
-                                                                    <td>Apr 26, 2025</td>
-                                                                    <td>May 1, 2025</td>
-                                                                    <td><span class="text-black fw-5">PayPal</span></td>
-                                                                    <td><span class="badge bg-label-success">Paid</span>
-                                                                    </td>
-                                                                    <td>$89.50</td>
-                                                                    <td>
-                                                                        <div class="d-flex-items gap-5">
-                                                                            <a class="btn-icon btn-success-light"
-                                                                                href="ecommerce-order-details.html">
-                                                                                <i class="ri-eye-line"></i>
-                                                                            </a>
-                                                                            <button
-                                                                                class="btn-icon btn-danger-light removeRow"
-                                                                                type="button">
-                                                                                <i class="ri-delete-bin-line"></i>
-                                                                            </button>
-                                                                        </div>
-                                                                    </td>
-                                                                </tr>
-                                                                <tr class="odd">
-                                                                    <td class="sorting_1">#10027</td>
-                                                                    <td>Apr 27, 2025</td>
-                                                                    <td>Apr 30, 2025</td>
-                                                                    <td><span class="text-black fw-5">Bank Transfer</span>
-                                                                    </td>
-                                                                    <td><span class="badge bg-label-warning">Pending</span>
-                                                                    </td>
-                                                                    <td>$245.75</td>
-                                                                    <td>
-                                                                        <div class="d-flex-items gap-5">
-                                                                            <a class="btn-icon btn-success-light"
-                                                                                href="ecommerce-order-details.html">
-                                                                                <i class="ri-eye-line"></i>
-                                                                            </a>
-                                                                            <button
-                                                                                class="btn-icon btn-danger-light removeRow"
-                                                                                type="button">
-                                                                                <i class="ri-delete-bin-line"></i>
-                                                                            </button>
-                                                                        </div>
-                                                                    </td>
-                                                                </tr>
-                                                                <tr class="even">
-                                                                    <td class="sorting_1">#10028</td>
-                                                                    <td>Apr 28, 2025</td>
-                                                                    <td>May 3, 2025</td>
-                                                                    <td><span class="text-black fw-5">Credit Card</span>
-                                                                    </td>
-                                                                    <td><span class="badge bg-label-danger">Failed</span>
-                                                                    </td>
-                                                                    <td>$179.99</td>
-                                                                    <td>
-                                                                        <div class="d-flex-items gap-5">
-                                                                            <a class="btn-icon btn-success-light"
-                                                                                href="ecommerce-order-details.html">
-                                                                                <i class="ri-eye-line"></i>
-                                                                            </a>
-                                                                            <button
-                                                                                class="btn-icon btn-danger-light removeRow"
-                                                                                type="button">
-                                                                                <i class="ri-delete-bin-line"></i>
-                                                                            </button>
-                                                                        </div>
-                                                                    </td>
-                                                                </tr>
-                                                                <tr class="odd">
-                                                                    <td class="sorting_1">#10029</td>
-                                                                    <td>Apr 29, 2025</td>
-                                                                    <td>May 5, 2025</td>
-                                                                    <td><span class="text-black fw-5">Cash on
-                                                                            Delivery</span>
-                                                                    </td>
-                                                                    <td><span class="badge bg-label-info">Processing</span>
-                                                                    </td>
-                                                                    <td>$65.20</td>
-                                                                    <td>
-                                                                        <div class="d-flex-items gap-5">
-                                                                            <a class="btn-icon btn-success-light"
-                                                                                href="ecommerce-order-details.html">
-                                                                                <i class="ri-eye-line"></i>
-                                                                            </a>
-                                                                            <button
-                                                                                class="btn-icon btn-danger-light removeRow"
-                                                                                type="button">
-                                                                                <i class="ri-delete-bin-line"></i>
-                                                                            </button>
-                                                                        </div>
-                                                                    </td>
-                                                                </tr>
-                                                                <tr class="even">
-                                                                    <td class="sorting_1">#10030</td>
-                                                                    <td>Apr 30, 2025</td>
-                                                                    <td>May 4, 2025</td>
-                                                                    <td><span class="text-black fw-5">Stripe</span></td>
-                                                                    <td><span class="badge bg-label-success">Paid</span>
-                                                                    </td>
-                                                                    <td>$320.00</td>
-                                                                    <td>
-                                                                        <div class="d-flex-items gap-5">
-                                                                            <a class="btn-icon btn-success-light"
-                                                                                href="ecommerce-order-details.html">
-                                                                                <i class="ri-eye-line"></i>
-                                                                            </a>
-                                                                            <button
-                                                                                class="btn-icon btn-danger-light removeRow"
-                                                                                type="button">
-                                                                                <i class="ri-delete-bin-line"></i>
-                                                                            </button>
-                                                                        </div>
-                                                                    </td>
-                                                                </tr>
-                                                            </tbody>
-                                                        </table>
-                                                    </div>
-                                                </div>
-                                                <div class="row">
-                                                    <div class="col-sm-12 col-md-5">
-                                                        <div class="dataTables_info" id="dataTableDefault_info"
-                                                            role="status" aria-live="polite">Showing 1 to 6 of 6 entries
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-sm-12 col-md-7">
-                                                        <div class="dataTables_paginate paging_simple_numbers"
-                                                            id="dataTableDefault_paginate">
-                                                            <ul class="pagination">
-                                                                <li class="paginate_button page-item previous disabled"
-                                                                    id="dataTableDefault_previous"><a href="#"
-                                                                        aria-controls="dataTableDefault" data-dt-idx="0"
-                                                                        tabindex="0" class="page-link">Previous</a></li>
-                                                                <li class="paginate_button page-item active"><a
-                                                                        href="#" aria-controls="dataTableDefault"
-                                                                        data-dt-idx="1" tabindex="0"
-                                                                        class="page-link">1</a></li>
-                                                                <li class="paginate_button page-item next disabled"
-                                                                    id="dataTableDefault_next"><a href="#"
-                                                                        aria-controls="dataTableDefault" data-dt-idx="2"
-                                                                        tabindex="0" class="page-link">Next</a></li>
-                                                            </ul>
-                                                        </div>
-                                                    </div>
+                            {{-- Activity Tab --}}
+                            <div class="tab-pane fade" id="activity" role="tabpanel">
+                                <div class="card border-0 shadow-sm">
+                                    <div class="card-header bg-white border-bottom py-3">
+                                        <h5 class="mb-0 fw-bold">Activity Log</h5>
+                                    </div>
+                                    <div class="card-body p-4">
+                                        <div id="activityLog">
+                                            <div class="text-center py-5">
+                                                <div class="spinner-border text-primary" role="status">
+                                                    <span class="visually-hidden">Loading...</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -509,99 +406,369 @@
                         </div>
                     </div>
                 </div>
-
-
-
             </div>
         </div>
     </div>
+
+    {{-- Edit User Modal --}}
+    @can('users.update')
+        <div class="modal fade" id="editUserModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Edit User Information</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form id="editUserForm" action="{{ route('users.update', encrypt($data->id)) }}" method="POST">
+                        @csrf
+                        @method('PUT')
+                        <div class="modal-body p-4">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="name" class="form-label">Full Name *</label>
+                                    <input type="text" class="form-control" id="name" name="name"
+                                        value="{{ $data->name }}" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="email" class="form-label">Email Address *</label>
+                                    <input type="email" class="form-control" id="email" name="email"
+                                        value="{{ $data->email }}" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="phone_code" class="form-label">Phone Code</label>
+                                    <input type="text" class="form-control" id="phone_code" name="phone_code"
+                                        value="{{ $data->phone_code }}" placeholder="+1">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="phone" class="form-label">Phone Number</label>
+                                    <input type="tel" class="form-control" id="phone" name="phone"
+                                        value="{{ $data->phone }}" placeholder="1234567890">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="timezone" class="form-label">Timezone</label>
+                                    <select class="form-select" id="timezone" name="timezone">
+                                        @foreach (timezone_identifiers_list() as $tz)
+                                            <option value="{{ $tz }}"
+                                                {{ $data->timezone == $tz ? 'selected' : '' }}>{{ $tz }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="currency" class="form-label">Currency</label>
+                                    <select class="form-select" id="currency" name="currency">
+                                        <option value="USD" {{ $data->currency == 'USD' ? 'selected' : '' }}>USD ($)
+                                        </option>
+                                        <option value="INR" {{ $data->currency == 'INR' ? 'selected' : '' }}>INR (₹)
+                                        </option>
+                                        <option value="EUR" {{ $data->currency == 'EUR' ? 'selected' : '' }}>EUR (€)
+                                        </option>
+                                        <option value="GBP" {{ $data->currency == 'GBP' ? 'selected' : '' }}>GBP (£)
+                                        </option>
+                                    </select>
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label for="status" class="form-label">Account Status</label>
+                                    <select class="form-select" id="status" name="status" required>
+                                        <option value="active" {{ $data->status == 'active' ? 'selected' : '' }}>Active
+                                        </option>
+                                        <option value="inactive" {{ $data->status == 'inactive' ? 'selected' : '' }}>Inactive
+                                        </option>
+                                        <option value="pending" {{ $data->status == 'pending' ? 'selected' : '' }}>Pending
+                                        </option>
+                                        <option value="suspended" {{ $data->status == 'suspended' ? 'selected' : '' }}>
+                                            Suspended</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="ri-save-line me-1"></i> Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @endcan
+
+    {{-- Password Reset Modal --}}
+    @can('users.reset.password')
+        <div class="modal fade" id="passwordModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Reset Password</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form id="changePasswordForm" action="{{ route('users.password.update', encrypt($data->id)) }}"
+                        method="POST">
+                        @csrf
+                        @method('PUT')
+                        <div class="modal-body p-4">
+                            <div class="mb-3">
+                                <label for="password" class="form-label">New Password *</label>
+                                <input type="password" class="form-control" id="password" name="password" required
+                                    minlength="8">
+                            </div>
+                            <div class="mb-3">
+                                <label for="password_confirmation" class="form-label">Confirm Password *</label>
+                                <input type="password" class="form-control" id="password_confirmation"
+                                    name="password_confirmation" required>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="ri-lock-line me-1"></i> Update Password
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @endcan
 @endsection
 
 
+
 @push('style')
-    <link rel="stylesheet" href="{{ asset('assets/admin/css/plugins/jquery-confirm.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/admin/css/plugins/dataTables.dataTables.css') }}">
 @endpush
 
 
 @push('scripts')
-    <!-- DataTables -->
-    <link rel="stylesheet" href="https://cdn.datatables.net/2.3.5/css/dataTables.dataTables.css">
-    <script src="https://cdn.datatables.net/2.3.5/js/dataTables.js"></script>
-
-    <script src="{{ asset('assets/admin/js/plugins/jquery-confirm.min.js') }}"></script>
+    <script src="{{ asset('assets/admin/js/plugins/dataTables.js') }}"></script>
 
     <script>
         $(document).ready(function() {
-            let table = $('#userTable').DataTable({
-                processing: true,
-                serverSide: true,
-                responsive: true,
-                autoWidth: false,
+            const userId = '{{ $data->id }}';
+            const currency = '{{ $data->currency ?? '$' }}';
+            const csrfToken = $('meta[name="csrf-token"]').attr('content');
 
-                ajax: {
-                    url: "{{ route('staff.index') }}",
-                    data: function(d) {
-                        d.date_range = $('#rangeCalendar').val(); // date filter
+            // Initialize DataTables
+            let ordersTable = null;
+            let transactionsTable = null;
+
+            // Load initial data
+            loadUserStats();
+            initOrdersTable();
+
+            // Tab change handler
+            $('#userDetailTabs button[data-bs-toggle="tab"]').on('shown.bs.tab', function(e) {
+                const target = $(e.target).attr('data-bs-target');
+
+                if (target === '#transactions') {
+                    if (transactionsTable) {
+                        transactionsTable.draw(); // Refresh existing table
+                    } else {
+                        initTransactionsTable(); // Initialize if not exists
                     }
-                },
-
-                columns: [{
-                        data: 'id',
-                        className: 'text-center fw-bold'
-                    },
-                    {
-                        data: 'name'
-                    },
-                    {
-                        data: 'phone'
-                    },
-                    {
-                        data: 'email'
-                    },
-                    {
-                        data: 'created_at'
-                    },
-                    {
-                        data: 'action',
-                        orderable: false,
-                        searchable: false
-                    } // buttons
-                ],
-
-                order: [
-                    [0, 'desc']
-                ],
-
-                language: {
-                    search: "",
-                    searchPlaceholder: "Search...",
-                    lengthMenu: "Show _MENU_",
-                    zeroRecords: "No matching records found",
+                } else if (target === '#orders') {
+                    if (ordersTable) {
+                        ordersTable.draw();
+                    }
+                } else if (target === '#activity') {
+                    loadActivityLog();
                 }
             });
+            // Load user statistics
+            function loadUserStats() {
+                $.ajax({
+                    url: `/admin/users/${userId}/stats`,
+                    type: 'GET',
+                    data: {
+                        user_id: userId
+                    },
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    success: function(data) {
+                        if (data.status) {
+                            $('#stat-total-orders').html(data.response.total_orders || 0);
+                            $('#stat-processing').html(data.response.processing_orders || 0);
+                            $('#stat-completed').html(data.response.delivered_orders || 0);
+                            $('#stat-total-spent').html(data.response.total_spent || 0);
+                        }
+                    },
+                    error: function() {
+                        setDefaultStats();
+                    }
+                });
+            }
 
-            // Search button
-            $('#filterSearchBtn').on('click', function() {
-                table.draw();
-            });
+            function setDefaultStats() {
+                $('#stat-total-orders, #stat-processing, #stat-completed').html('0');
+                $('#stat-total-spent').html(formatCurrency(0));
+            }
 
-            // Reset button
-            $('#resetFilterBtn').on('click', function() {
-                $('#rangeCalendar').flatpickr().clear(); // clear date
-                table.draw();
-            });
+            // Initialize Orders DataTable
+            function initOrdersTable() {
+                ordersTable = $('#ordersTable').DataTable({
+                    processing: true,
+                    serverSide: true,
+                    ajax: {
+                        url: `/admin/users/${userId}/orders`,
+                        type: 'GET',
+                        data: function(d) {
+                            d.user_id = userId;
+                        },
+                        headers: {
+                            'X-CSRF-TOKEN': csrfToken
+                        }
+                    },
+                    columns: [{
+                            data: 'order_number'
+                        },
+                        {
+                            data: 'customer'
+                        },
+                        {
+                            data: 'items_count'
+                        },
+                        {
+                            data: 'amount',
+                            orderable: false
+                        },
+                        {
+                            data: 'status',
+                            orderable: false
+                        },
+                        {
+                            data: 'rating',
+                            orderable: false
+                        },
+                        {
+                            data: 'created_at'
+                        },
+                        {
+                            data: 'action',
+                            orderable: false,
+                            searchable: false
+                        }
+                    ],
+                    order: [
+                        [1, 'desc']
+                    ],
+                    pageLength: 10,
+                    language: {
+                        emptyTable: "No orders found",
+                        zeroRecords: "No matching orders found",
+                        search: "Search orders..."
+                    }
+                });
+            }
 
-            // Filter button
-            $('#filterSearchBtn').on('click', function() {
-                table.draw();
-            });
+            // Initialize Transactions DataTable
+            function initTransactionsTable() {
+                transactionsTable = $('#transactionsTable').DataTable({
+                    processing: true,
+                    serverSide: true,
+                    ajax: {
+                        url: `/admin/users/${userId}/transactions`,
+                        type: 'GET',
+                        data: function(d) {
+                            d.user_id = userId;
+                        },
+                        headers: {
+                            'X-CSRF-TOKEN': csrfToken
+                        }
+                    },
+                    columns: [{
+                            data: 'id'
+                        },
+                        {
+                            data: 'transaction_id'
+                        },
+                        {
+                            data: 'order_id'
+                        },
+                        {
+                            data: 'user'
+                        },
+                        {
+                            data: 'amount'
+                        },
+                        {
+                            data: 'status'
+                        },
+                        {
+                            data: 'created_at'
+                        },
+                        @canany(['transactions.view', 'transactions.update.status', 'transactions.refund'])
+                            {
+                                data: 'action',
+                                orderable: false,
+                                searchable: false
+                            }
+                        @endcanany
+                    ],
+                    order: [
+                        [1, 'desc']
+                    ],
+                    pageLength: 10,
+                    language: {
+                        emptyTable: "No transactions found",
+                        zeroRecords: "No matching transactions found",
+                        search: "Search transactions..."
+                    }
+                });
+            }
 
-            $('#resetFilterBtn').on('click', function() {
-                // Clear Flatpickr input
-                $('#rangeCalendar').flatpickr().clear();
-                // Redraw table
-                table.draw();
-            });
+            // Load activity log
+            function loadActivityLog() {
+                $.ajax({
+                    url: `/admin/users/${userId}/activity`,
+                    type: 'GET',
+                    data: function(d) {
+                        d.user_id = userId;
+                    },
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    success: function(response) {
+                        const container = $('#activityLog');
+                        if (response.success && response.data && response.data.length > 0) {
+                            let html = '<div class="activity-timeline">';
+                            response.data.forEach(function(activity) {
+                                html += `
+                                    <div class="activity-item mb-3">
+                                        <div class="d-flex">
+                                            <div class="flex-shrink-0">
+                                                <div class="avatar avatar-sm bg-light rounded">
+                                                    <i class="ri-user-line"></i>
+                                                </div>
+                                            </div>
+                                            <div class="flex-grow-1 ms-3">
+                                                <p class="mb-1">${activity.description || 'Activity'}</p>
+                                                <p class="text-muted small mb-0">${formatDateTime(activity.created_at)}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
+                            });
+                            html += '</div>';
+                            container.html(html);
+                        } else {
+                            container.html(`
+                                <div class="text-center text-muted py-5">
+                                    <i class="ri-inbox-line fs-1 d-block mb-2"></i>
+                                    <p class="mb-0">No activity found</p>
+                                </div>
+                            `);
+                        }
+                    },
+                    error: function() {
+                        $('#activityLog').html(`
+                            <div class="text-center text-danger py-5">
+                                <i class="ri-error-warning-line fs-1 d-block mb-2"></i>
+                                <p class="mb-0">Failed to load activity</p>
+                            </div>
+                        `);
+                    }
+                });
+            }
 
 
 

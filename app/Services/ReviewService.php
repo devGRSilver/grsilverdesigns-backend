@@ -97,7 +97,7 @@ class ReviewService
                 'user' => $review->user
                     ? $review->user->name
                     : 'Guest',
-                'rating' => $review->rating . '⭐',
+                'rating' => view_rating($order->rating ?? 0),
                 'comment' => str($review->comment)->limit(50),
                 'status' => $statusHtml,
                 'updated_at' => $review->updated_at->format('d M Y'),

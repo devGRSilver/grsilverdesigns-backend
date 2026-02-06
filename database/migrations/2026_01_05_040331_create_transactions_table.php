@@ -20,7 +20,7 @@ return new class extends Migration {
 
             // Amounts
             $table->decimal('amount', 16, 4)->comment('Transaction amount (positive)');
-            $table->string('currency_code', 3)->default('INR')->comment('ISO 4217 currency code');
+            $table->string('currency_code', 3)->default('$')->comment('ISO 4217 currency code');
 
 
 

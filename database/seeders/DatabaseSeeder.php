@@ -6,6 +6,7 @@ use Database\Seeders\Admin\AttributeAndValueSeeder;
 use Database\Seeders\Admin\BlogSeeder;
 use Database\Seeders\Admin\CategorySeeder;
 use Database\Seeders\Admin\ContentSeeder;
+use Database\Seeders\Admin\CouponSeeder;
 use Database\Seeders\Admin\MetalSeeder;
 use Database\Seeders\Admin\NewsletterSeeder;
 use Database\Seeders\Admin\NotificationSeeder;
@@ -40,7 +41,8 @@ class DatabaseSeeder extends Seeder
             ReviewSeeder::class,
             SettingSeeder::class,
             OrderSeeder::class,
-            NotificationSeeder::class
+            NotificationSeeder::class,
+            CouponSeeder::class,
         ]);
     }
 }

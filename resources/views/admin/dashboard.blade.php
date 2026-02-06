@@ -636,15 +636,19 @@
 
     <script>
         $(document).ready(function() {
+            // Global variables
             let orderChart;
             let trendingSwiper;
+            let dashboardInitialized = false;
+            let reloadDebounceTimer = null;
+            let isReloading = false;
 
             /* =========================
                DATE RANGE PICKER
             ========================== */
             (function initDateRange() {
                 const today = new Date();
-                today.setHours(0, 0, 0, 0); // 🔥 important
+                today.setHours(0, 0, 0, 0);
 
                 const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
 
@@ -657,15 +661,13 @@
                     defaultDate: [firstDay, today],
                     onChange: function(selectedDates) {
                         if (selectedDates.length === 2) {
-                            reloadAllDashboardData();
+                            debouncedReloadAllDashboardData();
                         }
                     }
                 });
 
                 fp.setDate([firstDay, today], true);
             })();
-
-
 
             /* =========================
                GLOBAL LOADER
@@ -676,6 +678,62 @@
 
             function hideLoader() {
                 $('#globalLoader').removeClass('show').fadeOut(200);
+            }
+
+            /* =========================
+               DEBOUNCED RELOAD SYSTEM
+            ========================== */
+            function debouncedReloadAllDashboardData(immediate = false) {
+                if (isReloading) {
+                    console.log('⚠️ Reload already in progress, skipping...');
+                    return;
+                }
+
+                if (reloadDebounceTimer) {
+                    clearTimeout(reloadDebounceTimer);
+                }
+
+                if (immediate) {
+                    performReload();
+                } else {
+                    reloadDebounceTimer = setTimeout(performReload, 150);
+                }
+            }
+
+            function performReload() {
+                if (isReloading) return;
+
+                isReloading = true;
+                console.log('🔄 Starting Dashboard Reload');
+                console.log('📅 Date Range:', $('#rangeCalendar').val());
+
+                showLoader();
+                resetToLoadingState();
+
+                // Load all data concurrently
+                $.when(
+                    loadStats(),
+                    loadOrderChart(),
+                    loadTopCountries(),
+                    loadTrendingProducts(),
+                    loadBestSellingProducts(),
+                    loadRecentTransactions(),
+                    loadTopCustomers(),
+                    loadTopCategories(),
+                    loadRecentOrders()
+                ).done(function() {
+                    console.log('✅ All Dashboard Data Loaded Successfully');
+                }).fail(function(jqXHR, textStatus, errorThrown) {
+                    console.error('❌ Dashboard Data Loading Failed');
+                    console.error('Status:', textStatus);
+                    console.error('Error:', errorThrown);
+                    showErrorNotification('Failed to load some dashboard data. Please refresh the page.');
+                }).always(function() {
+                    hideLoader();
+                    isReloading = false;
+                    reloadDebounceTimer = null;
+                    console.log('🏁 Dashboard Reload Complete');
+                });
             }
 
             /* =========================
@@ -690,7 +748,7 @@
                         date_range: $('#rangeCalendar').val()
                     },
                     success: function(res) {
-                        console.log('Stats loaded:', res);
+                        console.log('📊 Stats loaded:', res);
 
                         if (!res.status || !res.response) {
                             console.warn('Invalid stats response');
@@ -825,6 +883,10 @@
                     }
                 };
 
+                if (orderChart) {
+                    orderChart.destroy();
+                }
+
                 orderChart = new ApexCharts(
                     document.querySelector("#order-status"),
                     options
@@ -845,7 +907,7 @@
                         date_range: $('#rangeCalendar').val()
                     },
                     success: function(res) {
-                        console.log('Chart data loaded:', res);
+                        console.log('📈 Chart data loaded:', res);
 
                         if (!res.status || !res.response) {
                             console.warn('Invalid chart response');
@@ -900,7 +962,7 @@
                         date_range: $('#rangeCalendar').val()
                     },
                     success: function(res) {
-                        console.log('Top countries loaded:', res);
+                        console.log('🌍 Top countries loaded:', res);
 
                         if (!res.status || !res.response || !res.response.length) {
                             $('#salesCountriesList').html(
@@ -926,7 +988,6 @@
                                         aria-valuemax="100">
                                     </div>
                                 </div>
-                                <small class="text-muted">${item.total_orders} orders</small>
                             </div>
                         `;
                         });
@@ -954,6 +1015,8 @@
                         date_range: $('#rangeCalendar').val()
                     },
                     success: function(res) {
+                        console.log('🔥 Trending products loaded:', res);
+
                         if (!res.status || !res.response || !res.response.length) {
                             $('#trendingProductsWrapper').html(
                                 '<div class="text-muted text-center p-5">No trending products</div>'
@@ -964,23 +1027,26 @@
                         let html = '';
                         $.each(res.response, function(index, product) {
                             html += `
-                                <div class="swiper-slide">
-                                    <div class="card-slide-wrapper p-relative">
-                                        <div class="card-slide-thumb">
-                                            <img src="${product.main_image}" alt="${product.name}" style="width: 100%; height: 250px; object-fit: cover;">
-                                        </div>
-                                        <div class="card-slide-bottom p-3">
-                                            <h5 class="text-white mb-2">
-                                                <a href="${product.url}" class="text-white text-decoration-none">${product.name}</a>
-                                            </h5>
-                                            <div class="bd-price">
-                                                <span class="current-price text-white fw-bold">${product.price}</span>
-                                                ${product.old_price ? `<span class="old-price text-muted text-decoration-line-through ms-2">${product.old_price}</span>` : ''}
-                                            </div>
+                            <div class="swiper-slide">
+                                <div class="card-slide-wrapper p-relative">
+                                    <div class="card-slide-thumb">
+                                        <img src="${product.main_image || '/images/default-product.jpg'}" 
+                                             alt="${product.name}" 
+                                             style="width: 100%; height: 250px; object-fit: cover;"
+                                             onerror="this.src='/images/default-product.jpg'">
+                                    </div>
+                                    <div class="card-slide-bottom p-3">
+                                        <h5 class="text-white mb-2">
+                                            <a href="${product.url || '#'}" class="text-white text-decoration-none">${product.name}</a>
+                                        </h5>
+                                        <div class="bd-price">
+                                            <span class="current-price text-white fw-bold">${product.price || '$0.00'}</span>
+                                            ${product.old_price ? `<span class="old-price text-muted text-decoration-line-through ms-2">${product.old_price}</span>` : ''}
                                         </div>
                                     </div>
                                 </div>
-                            `;
+                            </div>
+                        `;
                         });
 
                         $('#trendingProductsWrapper').html(html);
@@ -988,6 +1054,9 @@
                     },
                     error: function(xhr, status, error) {
                         console.error('Error loading trending products:', error);
+                        $('#trendingProductsWrapper').html(
+                            '<div class="text-danger text-center p-5">Failed to load trending products</div>'
+                        );
                     }
                 });
             }
@@ -1027,7 +1096,7 @@
                         date_range: $('#rangeCalendar').val()
                     },
                     success: function(res) {
-                        console.log('Best selling products loaded:', res);
+                        console.log('🏆 Best selling products loaded:', res);
 
                         if (!res.status || !res.response || !res.response.length) {
                             $('#bestSellingProductsTable tbody').html(
@@ -1048,18 +1117,18 @@
                                     <div class="d-flex align-items-center gap-2">
                                         <div class="avatar flex-shrink-0">
                                             <img class="rounded" 
-                                                 src="${product.image}" 
+                                                 src="${product.image || '/images/default-product.jpg'}" 
                                                  alt="${product.name}" 
                                                  style="width: 45px; height: 45px; object-fit: cover;"
-                                                 >
+                                                 onerror="this.src='/images/default-product.jpg'">
                                         </div>
-                                        <h6 class="text-dark fw-semibold mb-0">${product.name}</h6>
+                                        <h6 class="text-dark fw-semibold mb-0">${product.name || 'Unknown Product'}</h6>
                                     </div>
                                 </td>
-                                <td class="text-dark fw-medium">$${product.price}</td>
-                                <td class="text-muted">${product.orders}</td>
+                                <td class="text-dark fw-medium">$${product.price || '0.00'}</td>
+                                <td class="text-muted">${product.orders || 0}</td>
                                 <td>${available}</td>
-                                <td class="text-dark fw-bold">$${product.total}</td>
+                                <td class="text-dark fw-bold">$${product.total || '0.00'}</td>
                             </tr>
                         `;
                         });
@@ -1087,7 +1156,7 @@
                         date_range: $('#rangeCalendar').val()
                     },
                     success: function(res) {
-                        console.log('Recent transactions loaded:', res);
+                        console.log('💳 Recent transactions loaded:', res);
 
                         if (!res.status || !res.response || !res.response.length) {
                             $('#recentTransactionsList').html(
@@ -1098,24 +1167,21 @@
 
                         let html = '';
                         $.each(res.response, function(index, tx) {
-                            let srNo = index + 1; // ✅ serial number
-
                             html += `
-                        <li class="d-flex justify-content-between align-items-start mb-3 pb-3 border-bottom">
-                        
+                            <li class="d-flex justify-content-between align-items-start mb-3 pb-3 border-bottom">
                                 <div>
-                                    <h6 class="fs-14 mb-1 fw-semibold">${tx.title}</h6>
+                                    <h6 class="fs-14 mb-1 fw-semibold">${tx.title || 'Transaction'}</h6>
                                     <div class="d-flex gap-2 align-items-center">
-                                        <span class="text-muted">${tx.method}</span>
+                                        <span class="text-muted">${tx.method || 'N/A'}</span>
                                         ${tx.date ? `<span class="text-muted">• ${tx.date}</span>` : ''}
                                     </div>
                                 </div>
-                            </div>
-                            <div class="text-end">
-                                <h6 class="${tx.amount_class || 'text-dark'} mb-1 fw-bold">${tx.amount}</h6>
-                                <span class="badge ${tx.status_class || 'bg-secondary'} badge-sm">${tx.status}</span>
-                            </div>
-                        </li>`;
+                                <div class="text-end">
+                                    <h6 class="${tx.amount_class || 'text-dark'} mb-1 fw-bold">${tx.amount || '$0.00'}</h6>
+                                    <span class="badge ${tx.status_class || 'bg-secondary'} badge-sm">${tx.status || 'Pending'}</span>
+                                </div>
+                            </li>
+                        `;
                         });
 
                         $('#recentTransactionsList').html(html);
@@ -1129,7 +1195,6 @@
                 });
             }
 
-
             /* =========================
                LOAD TOP CUSTOMERS
             ========================= */
@@ -1142,6 +1207,7 @@
                         date_range: $('#rangeCalendar').val()
                     },
                     success: function(res) {
+                        console.log('👥 Top customers loaded:', res);
 
                         if (!res.status || !res.response || !res.response.length) {
                             $('#topCustomersList').html(
@@ -1152,54 +1218,51 @@
 
                         let html = '';
                         $.each(res.response, function(i, customer) {
-
                             let avatar = customer.avatar ?
                                 `<img src="${customer.avatar}"
-                           class="rounded-circle border"
-                           width="44" height="44"
-                           alt="${customer.name}"
-                           >` :
+                                 class="rounded-circle border"
+                                 width="44" height="44"
+                                 alt="${customer.name}"
+                                 onerror="this.src='/images/default-avatar.jpg'">` :
                                 `<div class="rounded-circle bg-primary text-white fw-semibold d-flex align-items-center justify-content-center"
-                           style="width:44px;height:44px;">
-                           ${customer.initials}
-                       </div>`;
+                                 style="width:44px;height:44px;">
+                                 ${customer.initials || '?'}
+                             </div>`;
 
                             html += `
-                <li class="d-flex justify-content-between align-items-center py-3 border-bottom">
-                    
-                    <div class="d-flex align-items-center gap-3">
-                        ${avatar}
-                        <div>
-                            <div class="fw-semibold text-dark">
-                                ${customer.name}
-                            </div>
-                            ${customer.email ? `<div class="text-muted">${customer.email}</div>` : ''}
-                        </div>
-                    </div>
-
-                    <div class="text-end">
-                        <div class="fw-bold text-dark">
-                            ${customer.orders}
-                        </div>
-                        <div class="text-muted">
-                            Order${customer.orders > 1 ? 's' : ''}
-                        </div>
-                        ${customer.total_spent ? `<div class="text-success small fw-semibold">${customer.total_spent}</div>` : ''}
-                    </div>
-
-                </li>`;
+                            <li class="d-flex justify-content-between align-items-center py-3 border-bottom">
+                                <div class="d-flex align-items-center gap-3">
+                                    ${avatar}
+                                    <div>
+                                        <div class="fw-semibold text-dark">
+                                            ${customer.name || 'Unknown Customer'}
+                                        </div>
+                                        ${customer.email ? `<div class="text-muted">${customer.email}</div>` : ''}
+                                    </div>
+                                </div>
+                                <div class="text-end">
+                                    <div class="fw-bold text-dark">
+                                        ${customer.orders || 0}
+                                    </div>
+                                    <div class="text-muted">
+                                        Order${(customer.orders || 0) > 1 ? 's' : ''}
+                                    </div>
+                                    ${customer.total_spent ? `<div class="text-success small fw-semibold">${customer.total_spent}</div>` : ''}
+                                </div>
+                            </li>
+                        `;
                         });
 
                         $('#topCustomersList').html(html);
                     },
-                    error: function() {
+                    error: function(xhr, status, error) {
+                        console.error('Error loading top customers:', error);
                         $('#topCustomersList').html(
                             '<li class="text-danger text-center py-4">Error loading customers</li>'
                         );
                     }
                 });
             }
-
 
             /* =========================
                LOAD TOP CATEGORIES
@@ -1213,7 +1276,7 @@
                         date_range: $('#rangeCalendar').val()
                     },
                     success: function(res) {
-                        console.log('Top categories loaded:', res);
+                        console.log('📂 Top categories loaded:', res);
 
                         if (!res.status || !res.response || !res.response.length) {
                             $('#topCategoriesTable tbody').html(
@@ -1227,11 +1290,11 @@
                             html += `
                             <tr>
                                 <td>
-                                    <h6 class="mb-1 fs-14 fw-semibold">${category.name}</h6>
+                                    <h6 class="mb-1 fs-14 fw-semibold">${category.name || 'Unknown Category'}</h6>
                                     ${category.slug ? `<span class="text-muted">${category.slug}</span>` : ''}
                                 </td>
-                                <td class="text-end fw-bold text-success">$${category.revenue}</td>
-                                <td class="text-end text-muted">${category.orders}</td>
+                                <td class="text-end fw-bold text-success">$${category.revenue || '0.00'}</td>
+                                <td class="text-end text-muted">${category.orders || 0}</td>
                             </tr>
                         `;
                         });
@@ -1259,7 +1322,7 @@
                         date_range: $('#rangeCalendar').val()
                     },
                     success: function(res) {
-                        console.log('Recent orders loaded:', res);
+                        console.log('📦 Recent orders loaded:', res);
 
                         if (!res.status || !res.response || !res.response.length) {
                             $('#recentOrdersTable tbody').html(
@@ -1273,28 +1336,27 @@
                             html += `
                             <tr>
                                 <td>
-                                    <a href="/admin/orders/${order.id}" class="text-primary fw-bold">${order.order_id}</a>
+                                    <a href="${order.id ? '/admin/orders/' + order.id : '#'}" 
+                                       class="text-primary fw-bold">${order.order_id || 'N/A'}</a>
                                     ${order.date ? `<div class="text-muted">${order.date}</div>` : ''}
                                 </td>
                                 <td>
                                     <div class="d-flex align-items-center gap-2">
-                                       
                                         <div>
-                                            <h6 class="mb-0 fs-14 fw-semibold">${order.customer_name}</h6>
-                                            <span class="fs-12 text-muted">${order.customer_email}</span>
+                                            <h6 class="mb-0 fs-14 fw-semibold">${order.customer_name || 'Guest'}</h6>
+                                            <span class="fs-12 text-muted">${order.customer_email || ''}</span>
                                         </div>
                                     </div>
                                 </td>
                                 <td>
                                     <div class="d-flex align-items-center gap-2">
-                                    
-                                        <span class="fw-medium text-dark">${order.product_name}</span>
+                                        <span class="fw-medium text-dark">${order.product_name || 'Unknown Product'}</span>
                                     </div>
                                 </td>
-                                <td class="text-muted">${order.quantity}</td>
-                                <td class="fw-bold text-dark">$${order.amount}</td>
-                                 <td>
-                                    <span class="badge ${order.status_class || 'bg-secondary'}">${order.status}</span>
+                                <td class="text-muted">${order.quantity || 1}</td>
+                                <td class="fw-bold text-dark">$${order.amount || '0.00'}</td>
+                                <td>
+                                    <span class="badge ${order.status_class || 'bg-secondary'}">${order.status || 'Pending'}</span>
                                 </td>
                             </tr>
                         `;
@@ -1315,40 +1377,6 @@
                             '<tr><td colspan="6" class="text-center text-danger py-4">Error loading orders</td></tr>'
                         );
                     }
-                });
-            }
-
-            /* =========================
-               RELOAD ALL DATA
-            ========================== */
-            function reloadAllDashboardData() {
-                console.log('=== Starting Dashboard Reload ===');
-                console.log('Date Range:', $('#rangeCalendar').val());
-
-                showLoader();
-                resetToLoadingState();
-
-                // Load all data concurrently
-                $.when(
-                    loadStats(),
-                    loadOrderChart(),
-                    loadTopCountries(),
-                    loadTrendingProducts(),
-                    loadBestSellingProducts(),
-                    loadRecentTransactions(),
-                    loadTopCustomers(),
-                    loadTopCategories(),
-                    loadRecentOrders()
-                ).done(function() {
-                    console.log('=== All Dashboard Data Loaded Successfully ===');
-                }).fail(function(jqXHR, textStatus, errorThrown) {
-                    console.error('=== Dashboard Data Loading Failed ===');
-                    console.error('Status:', textStatus);
-                    console.error('Error:', errorThrown);
-                    showErrorNotification('Failed to load some dashboard data. Please refresh the page.');
-                }).always(function() {
-                    hideLoader();
-                    console.log('=== Dashboard Reload Complete ===');
                 });
             }
 
@@ -1397,62 +1425,107 @@
                ERROR NOTIFICATION
             ========================== */
             function showErrorNotification(message = 'Failed to load dashboard data. Please try again.') {
-                if (typeof Swal !== 'undefined') {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: message,
-                        toast: true,
-                        position: 'top-end',
-                        showConfirmButton: false,
-                        timer: 4000,
-                        timerProgressBar: true
-                    });
-                } else if (typeof toastr !== 'undefined') {
-                    toastr.error(message, 'Error');
-                } else {
-                    alert(message);
+                // You can replace this with a toast notification library
+                console.error('Notification:', message);
+
+                // Simple alert fallback
+                if ($('#errorToast').length === 0) {
+                    $('body').append(`
+                    <div id="errorToast" class="toast align-items-center text-bg-danger border-0 position-fixed top-0 end-0 m-3" role="alert" aria-live="assertive" aria-atomic="true">
+                        <div class="d-flex">
+                            <div class="toast-body">
+                                ${message}
+                            </div>
+                            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                        </div>
+                    </div>
+                `);
                 }
+
+                const toastEl = document.getElementById('errorToast');
+                const toast = bootstrap ? new bootstrap.Toast(toastEl) : null;
+                if (toast) toast.show();
             }
 
             /* =========================
-               ADD PULSE ANIMATION STYLE
+               ADD CSS ANIMATIONS
             ========================== */
-            $('<style>')
-                .prop('type', 'text/css')
-                .html(`
-                @keyframes pulse {
-                    0%, 100% { opacity: 1; }
-                    50% { opacity: 0.5; }
-                }
-                .skeleton-loader {
-                    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-                    background-size: 200% 100%;
-                    animation: loading 1.5s ease-in-out infinite;
-                }
-                @keyframes loading {
-                    0% { background-position: 200% 0; }
-                    100% { background-position: -200% 0; }
-                }
-            `)
-                .appendTo('head');
+            if (!$('#dashboard-styles').length) {
+                $('head').append(`
+                <style id="dashboard-styles">
+                    @keyframes pulse {
+                        0%, 100% { opacity: 1; }
+                        50% { opacity: 0.5; }
+                    }
+                    .skeleton-loader {
+                        background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+                        background-size: 200% 100%;
+                        animation: loading 1.5s ease-in-out infinite;
+                    }
+                    @keyframes loading {
+                        0% { background-position: 200% 0; }
+                        100% { background-position: -200% 0; }
+                    }
+                </style>
+            `);
+            }
 
             /* =========================
-               INITIAL LOAD
+               INITIALIZATION
             ========================== */
-            console.log('Initializing dashboard...');
+            console.log('🚀 Initializing dashboard...');
+
+            // Initialize chart
             initOrderChart();
 
-            // Small delay to ensure DOM is fully ready
-            setTimeout(function() {
-                reloadAllDashboardData();
-            }, 100);
+            // Initialize event listeners
+            function initEventListeners() {
+                // Refresh button
+                $('#refreshDashboard').off('click').on('click', function(e) {
+                    e.preventDefault();
+                    console.log('🔄 Manual refresh triggered');
+                    debouncedReloadAllDashboardData(true);
+                });
 
-            // Add export/refresh button handlers if they exist
-            $('#refreshDashboard').on('click', function(e) {
-                e.preventDefault();
-                reloadAllDashboardData();
-            });
+                // Window resize - redraw chart
+                $(window).off('resize.dashboard').on('resize.dashboard', function() {
+                    if (orderChart) {
+                        setTimeout(() => orderChart.updateDimensions(), 150);
+                    }
+                });
+            }
+
+            // Main initialization
+            function initializeDashboard() {
+                if (dashboardInitialized) {
+                    console.log('⚠️ Dashboard already initialized');
+                    return;
+                }
+
+                dashboardInitialized = true;
+
+                // Initialize event listeners
+                initEventListeners();
+
+                // Initial data load with slight delay
+                setTimeout(() => {
+                    console.log('📥 Loading initial dashboard data...');
+                    debouncedReloadAllDashboardData(true);
+                }, 300);
+            }
+
+            // Start initialization
+            initializeDashboard();
+
+            // Export for debugging
+            window.dashboard = {
+                reload: () => debouncedReloadAllDashboardData(true),
+                reset: () => resetToLoadingState(),
+                getChart: () => orderChart,
+                getSwiper: () => trendingSwiper
+            };
+
+            console.log('✅ Dashboard script loaded successfully');
         });
     </script>
 @endpush

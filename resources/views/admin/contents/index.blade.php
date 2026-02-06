@@ -4,46 +4,62 @@
     <div class="app-content-area">
         <div class="app-content-wrap">
             <div class="container-fluid">
-
                 <!-- Page Header -->
                 <div class="row mb-3">
                     <div class="col-xl-12">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <h1 class="fs-18 mb-0">{{ $title ?? 'CMS Pages' }}</h1>
-
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <h1 class="fs-18 mb-0">{{ $title ?? 'CMS Pages Management' }}</h1>
                             <nav aria-label="breadcrumb">
-                                <ol class="breadcrumb mb-0">
+                                <ol class="breadcrumb breadcrumb-example1 mb-0">
                                     <li class="breadcrumb-item">
                                         <a href="{{ route('admin.dashboard') }}">Home</a>
                                     </li>
-                                    <li class="breadcrumb-item active">Content</li>
+                                    <li class="breadcrumb-item active">CMS Pages</li>
                                 </ol>
                             </nav>
                         </div>
                     </div>
                 </div>
 
-                <!-- Filters -->
-                <div class="row">
-                    <div class="col-xl-12">
-                        <div class="card shadow-sm border-0">
-                            <div class="card-body">
+                <!-- Alert Container -->
+                <div id="alertContainer"></div>
+
+                <!-- Filters Card -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body p-3 p-md-4">
                                 <div class="row g-3 align-items-end">
 
-                                    <div class="col-md-2">
-                                        <label class="form-label">Status</label>
-                                        <select id="filterStatus" class="form-control filter-input">
-                                            <option value="">ALL</option>
+                                    <!-- Date Range Filter -->
+                                    <div class="col-lg-3 col-md-6">
+                                        <label for="rangeCalendar" class="form-label fw-semibold mb-2">
+                                            <i class="ri-calendar-line me-1"></i>Date Range
+                                        </label>
+                                        <input id="rangeCalendar" type="text" class="form-control"
+                                            placeholder="Select date range" readonly>
+                                    </div>
+
+                                    <!-- Status Filter -->
+                                    <div class="col-lg-2 col-md-6">
+                                        <label for="filterStatus" class="form-label fw-semibold mb-2">
+                                            <i class="ri-filter-line me-1"></i>Status
+                                        </label>
+                                        <select id="filterStatus" class="form-select" name="status">
+                                            <option value="">All Status</option>
                                             <option value="1">Active</option>
                                             <option value="0">Inactive</option>
                                         </select>
                                     </div>
 
+                                    <!-- Type Filter -->
                                     @if (!empty($contentTypes))
-                                        <div class="col-md-2">
-                                            <label class="form-label">Type</label>
-                                            <select id="filterType" class="form-control filter-input">
-                                                <option value="">ALL</option>
+                                        <div class="col-lg-2 col-md-6">
+                                            <label for="filterType" class="form-label fw-semibold mb-2">
+                                                <i class="ri-file-text-line me-1"></i>Type
+                                            </label>
+                                            <select id="filterType" class="form-select" name="type">
+                                                <option value="">All Types</option>
                                                 @foreach ($contentTypes as $value => $label)
                                                     <option value="{{ $value }}">{{ $label }}</option>
                                                 @endforeach
@@ -51,13 +67,19 @@
                                         </div>
                                     @endif
 
-                                    <div class="col-md-2 d-grid">
-                                        <button type="button" id="resetFilterBtn" class="btn btn-outline-secondary">
-                                            <i class="ri-refresh-line"></i> Reset
-                                        </button>
+                                    <!-- Action Buttons - Your specified layout -->
+                                    <div class="col-lg-4 col-md-8">
+                                        <div class="d-flex gap-2 flex-wrap">
+                                            <button id="filterSearchBtn" type="button" class="btn btn-success px-4">
+                                                <i class="ri-search-line me-1"></i> Search
+                                            </button>
+                                            <button id="resetFilterBtn" type="button"
+                                                class="btn btn-outline-secondary px-4">
+                                                <i class="ri-refresh-line me-1"></i> Reset
+                                            </button>
+
+                                        </div>
                                     </div>
-
-
 
                                 </div>
                             </div>
@@ -65,25 +87,56 @@
                     </div>
                 </div>
 
-                <!-- Table -->
+
+
+                <!-- CMS Pages Table -->
                 <div class="row">
-                    <div class="col-xl-12">
-                        <div class="card shadow-sm border-0">
-                            <div class="card-body">
-                                <div class="table-responsive">
-                                    <table id="dataTable" class="table table-bordered align-middle w-100">
+                    <div class="col-12">
+                        <div class="card border-0 shadow-sm">
+                            <!-- Table Header Controls -->
+                            <div class="card-header bg-white border-bottom py-3">
+                                <div class="row align-items-center g-3">
+                                    <div class="col-md-6">
+                                        <div id="dataTable_length_wrapper"></div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div id="dataTable_filter_wrapper"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Table Body -->
+                            <div class="card-body p-0">
+                                <div class="table-responsive position-relative">
+                                    <table id="dataTable" class="table table-bordered table-hover align-middle w-100">
                                         <thead class="table-light">
                                             <tr>
-                                                <th width="50">#</th>
-                                                <th width="90">Image</th>
-                                                <th>Title</th>
-                                                <th>Slug</th>
-                                                <th width="90">Status</th>
-                                                <th width="130">Updated At</th>
-                                                <th width="120">Action</th>
+                                                <th class="px-3 py-3 fw-semibold">#</th>
+                                                <th class="px-3 py-3 fw-semibold text-center">Image</th>
+                                                <th class="px-3 py-3 fw-semibold">Title</th>
+                                                <th class="px-3 py-3 fw-semibold">Slug</th>
+                                                <th class="px-3 py-3 fw-semibold">Type</th>
+                                                <th class="px-3 py-3 fw-semibold text-center">Status</th>
+                                                <th class="px-3 py-3 fw-semibold">Updated</th>
+                                                <th class="px-3 py-3 fw-semibold text-center">Action</th>
                                             </tr>
                                         </thead>
+                                        <tbody>
+                                            <!-- DataTable will populate rows here -->
+                                        </tbody>
                                     </table>
+                                </div>
+                            </div>
+
+                            <!-- Table Footer Controls -->
+                            <div class="card-footer bg-white border-top py-3">
+                                <div class="row align-items-center g-3">
+                                    <div class="col-md-6">
+                                        <div id="dataTable_info_wrapper"></div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div id="dataTable_paginate_wrapper"></div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -98,75 +151,585 @@
 @push('style')
     <link rel="stylesheet" href="{{ asset('assets/admin/css/plugins/dataTables.dataTables.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/admin/css/plugins/jquery-confirm.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/admin/css/plugins/flatpickr.min.css') }}">
+    <style>
+        .statistics-card {
+            transition: all 0.3s ease;
+        }
+
+        .statistics-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .page-image {
+            width: 60px;
+            height: 40px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+    </style>
 @endpush
 
 @push('scripts')
     <script src="{{ asset('assets/admin/js/plugins/dataTables.js') }}"></script>
     <script src="{{ asset('assets/admin/js/plugins/jquery-confirm.min.js') }}"></script>
+    <script src="{{ asset('assets/admin/js/plugins/flatpickr.min.js') }}"></script>
 
     <script>
-        $(function() {
+        (function($) {
+            "use strict";
 
-            const table = $('#dataTable').DataTable({
-                processing: true,
-                serverSide: true,
-                responsive: true,
-                autoWidth: false,
+            let table = null;
+            let calendar = null;
+            let isInitialLoad = true;
+            let isFilterChange = false;
 
-                ajax: {
-                    url: "{{ route('contents.index') }}",
-                    data: function(d) {
-                        d.status = $('#filterStatus').val();
-                        d.type = $('#filterType').val();
-                    }
-                },
+            const $searchBtn = $('#filterSearchBtn');
+            const $resetBtn = $('#resetFilterBtn');
+            const $dataTableWrapper = $('.table-responsive');
+            const $alertContainer = $('#alertContainer');
 
-                columns: [{
-                        data: 'id'
-                    },
-                    {
-                        data: 'image',
-                        orderable: false,
-                        searchable: false
-                    },
-                    {
-                        data: 'title'
-                    },
-                    {
-                        data: 'slug'
-                    },
-                    {
-                        data: 'status'
-                    },
-                    {
-                        data: 'updated_at'
-                    },
-                    {
-                        data: 'action',
-                        orderable: false,
-                        searchable: false
-                    }
-                ],
+            // Loading overlay template
+            const LOADING_OVERLAY = `
+                <div class="loading-overlay position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-white bg-opacity-75" style="z-index: 10; min-height: 300px;">
+                    <div class="text-center">
+                        <div class="spinner-border text-primary mb-3" style="width: 3rem; height: 3rem;" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="text-muted fw-semibold mb-0">Loading CMS pages...</p>
+                        <small class="text-muted">Please wait</small>
+                    </div>
+                </div>
+            `;
 
-                order: [
-                    [0, 'desc']
-                ],
+            /* ------------------------------------
+             * Alert System
+             * ------------------------------------ */
+            function showAlert(message, type = 'success', icon = 'checkbox-circle-line', duration = 4000) {
+                const alertId = 'alert-' + Date.now();
+                const alert = `
+                    <div id="${alertId}" class="alert alert-${type} alert-dismissible fade show mb-3" role="alert">
+                        <i class="ri-${icon} me-2"></i>
+                        ${message}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                `;
 
-                language: {
-                    search: "",
-                    searchPlaceholder: "Search pages..."
+                $alertContainer.append(alert);
+
+                if (duration > 0) {
+                    setTimeout(function() {
+                        $('#' + alertId).fadeOut(300, function() {
+                            $(this).remove();
+                        });
+                    }, duration);
                 }
+            }
+
+            function clearAlerts() {
+                $alertContainer.empty();
+            }
+
+            /* ------------------------------------
+             * Initialize Flatpickr
+             * ------------------------------------ */
+            function initDateRangePicker() {
+                calendar = flatpickr("#rangeCalendar", {
+                    mode: "range",
+                    altInput: true,
+                    altFormat: "j M Y",
+                    dateFormat: "Y-m-d",
+                    maxDate: "today",
+                    showMonths: window.innerWidth >= 768 ? 2 : 1,
+                    locale: {
+                        firstDayOfWeek: 1
+                    },
+                    onClose: function(selectedDates, dateStr, instance) {
+                        if (selectedDates.length === 2) {
+                            isFilterChange = true;
+                            $searchBtn.click();
+                        }
+                    }
+                });
+            }
+
+            /* ------------------------------------
+             * Show Loading Overlay
+             * ------------------------------------ */
+            function showLoadingOverlay() {
+                // Disable filter inputs
+                $('#rangeCalendar, #filterStatus, #filterType').prop('disabled', true);
+
+                // Update search button
+                $searchBtn.prop('disabled', true).html(
+                    '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Searching...'
+                );
+
+                // Update reset button
+                $resetBtn.prop('disabled', true).addClass('disabled');
+
+                // Add loading overlay to table
+                if ($dataTableWrapper.find('.loading-overlay').length === 0) {
+                    $dataTableWrapper.append(LOADING_OVERLAY);
+                }
+            }
+
+            /* ------------------------------------
+             * Hide Loading Overlay
+             * ------------------------------------ */
+            function hideLoadingOverlay() {
+                // Enable filter inputs
+                $('#rangeCalendar, #filterStatus, #filterType').prop('disabled', false);
+
+                // Reset search button
+                $searchBtn.prop('disabled', false).html('<i class="ri-search-line me-1"></i> Search');
+
+                // Reset reset button
+                $resetBtn.prop('disabled', false).removeClass('disabled');
+
+                // Remove loading overlay
+                $dataTableWrapper.find('.loading-overlay').fadeOut(200, function() {
+                    $(this).remove();
+                });
+            }
+
+            /* ------------------------------------
+             * Smooth Scroll to Table
+             * ------------------------------------ */
+            function scrollToTable() {
+                if (isFilterChange && !isInitialLoad) {
+                    setTimeout(function() {
+                        $('html, body').animate({
+                            scrollTop: $("#dataTable").offset().top - 120
+                        }, 400);
+                    }, 100);
+                }
+                isFilterChange = false;
+            }
+
+
+
+            /* ------------------------------------
+             * Initialize DataTable
+             * ------------------------------------ */
+            function initDataTable() {
+                if ($.fn.DataTable.isDataTable('#dataTable')) {
+                    $('#dataTable').DataTable().clear().destroy();
+                }
+
+                table = $('#dataTable')
+                    .on('preXhr.dt', function(e, settings, data) {
+                        showLoadingOverlay();
+                        clearAlerts();
+                    })
+                    .on('xhr.dt', function(e, settings, json, xhr) {
+                        hideLoadingOverlay();
+                        // Update statistics from response
+                        if (json && json.statistics) {
+                            updateStatistics(json.statistics);
+                        }
+                    })
+                    .DataTable({
+                        processing: false,
+                        serverSide: true,
+                        responsive: true,
+                        autoWidth: false,
+                        pagingType: "full_numbers",
+                        pageLength: 25,
+                        lengthMenu: [
+                            [10, 25, 50, 100],
+                            [10, 25, 50, 100]
+                        ],
+
+                        ajax: {
+                            url: "{{ route('contents.index') }}",
+                            data: function(d) {
+                                d.status = $('#filterStatus').val();
+                                d.type = $('#filterType').val();
+                                d.date_range = $('#rangeCalendar').val();
+                                d._token = "{{ csrf_token() }}";
+                            },
+                            error: function(xhr, error, thrown) {
+                                hideLoadingOverlay();
+                                console.error('DataTable error:', error);
+
+                                showAlert(
+                                    '<strong>Error!</strong> Unable to load CMS pages. Please check your connection and try again.',
+                                    'danger',
+                                    'error-warning-line',
+                                    6000
+                                );
+                            }
+                        },
+
+                        columns: [{
+                                data: 'id',
+                                className: 'px-3 py-2 fw-semibold text-primary',
+                                width: '60px'
+                            },
+                            {
+                                data: 'image',
+                                className: 'px-3 py-2 text-center',
+                                orderable: false,
+                                searchable: false,
+
+                            },
+                            {
+                                data: 'title',
+                                className: 'px-3 py-2 fw-medium'
+                            },
+                            {
+                                data: 'slug',
+                                className: 'px-3 py-2 text-muted small'
+                            },
+                            {
+                                data: 'type',
+                                className: 'px-3 py-2'
+                            },
+                            {
+                                data: 'status',
+                                className: 'px-3 py-2 text-center'
+                            },
+                            {
+                                data: 'updated_at',
+                                className: 'px-3 py-2 text-muted small'
+                            },
+                            {
+                                data: 'action',
+                                orderable: false,
+                                searchable: false,
+                                className: 'px-3 py-2 text-center'
+                            }
+                        ],
+
+                        order: [
+                            [0, 'desc']
+                        ],
+
+                        language: {
+                            search: "",
+                            searchPlaceholder: "Search pages...",
+                            lengthMenu: "_MENU_ per page",
+                            zeroRecords: `
+                                <div class="text-center py-5 my-5">
+                                    <i class="ri-file-text-line display-1 text-muted mb-3 d-block"></i>
+                                    <h5 class="text-muted mb-2">No CMS Pages Found</h5>
+                                    <p class="text-muted mb-0">Try adjusting your filters or search criteria</p>
+                                </div>
+                            `,
+                            info: "Showing _START_ to _END_ of _TOTAL_ pages",
+                            infoEmpty: "No pages to display",
+                            infoFiltered: "(filtered from _MAX_ total)",
+                            paginate: {
+                                first: '<i class="ri-skip-back-mini-line"></i>',
+                                last: '<i class="ri-skip-forward-mini-line"></i>',
+                                next: '<i class="ri-arrow-right-s-line"></i>',
+                                previous: '<i class="ri-arrow-left-s-line"></i>'
+                            },
+                            loadingRecords: "Loading...",
+                            processing: "Processing..."
+                        },
+
+                        initComplete: function() {
+                            // Move DataTable controls to custom containers
+                            const $wrapper = $('#dataTable_wrapper');
+
+                            // Move length menu to header
+                            const $lengthMenu = $wrapper.find('.dataTables_length');
+                            $lengthMenu.appendTo('#dataTable_length_wrapper');
+
+                            // Move search box to header and style it
+                            const $filter = $wrapper.find('.dataTables_filter');
+                            $filter.appendTo('#dataTable_filter_wrapper');
+                            $filter.addClass('text-end');
+                            $filter.find('input').addClass('form-control form-control-sm').css('display',
+                                'inline-block');
+
+                            // Move info to footer
+                            const $info = $wrapper.find('.dataTables_info');
+                            $info.appendTo('#dataTable_info_wrapper');
+
+                            // Move pagination to footer
+                            const $paginate = $wrapper.find('.dataTables_paginate');
+                            $paginate.appendTo('#dataTable_paginate_wrapper');
+                            $paginate.addClass('d-flex justify-content-end');
+                        },
+
+                        drawCallback: function(settings) {
+                            // Initialize tooltips for action buttons
+                            $('[data-bs-toggle="tooltip"]').tooltip();
+
+                            const api = this.api();
+                            const recordsTotal = api.page.info().recordsTotal;
+
+                            // Show success message only on initial load or filter change
+                            if ((isInitialLoad || isFilterChange) && recordsTotal > 0) {
+                                showAlert(
+                                    `<strong>Success!</strong> Loaded ${recordsTotal} page(s) successfully.`,
+                                    'success',
+                                    'checkbox-circle-line',
+                                    3000
+                                );
+                                isInitialLoad = false;
+                            }
+
+                            // Scroll to table on filter change
+                            scrollToTable();
+                        }
+                    });
+            }
+
+            /* ------------------------------------
+             * Bind Filter Events
+             * ------------------------------------ */
+            function bindFilterEvents() {
+                // Search button
+                $searchBtn.on('click', function() {
+                    isFilterChange = true;
+                    table.draw();
+                    loadStatistics();
+                });
+
+                // Reset button
+                $resetBtn.on('click', function() {
+                    const $this = $(this);
+
+                    // Clear filters
+                    if (calendar) {
+                        calendar.clear();
+                    }
+                    $('#filterStatus').val('');
+                    $('#filterType').val('');
+
+                    // Visual feedback
+                    $this.prop('disabled', true).html(
+                        '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Resetting...'
+                    );
+
+                    isFilterChange = true;
+
+                    setTimeout(function() {
+                        table.draw();
+                        loadStatistics();
+                        $this.prop('disabled', false).html(
+                            '<i class="ri-refresh-line me-1"></i> Reset');
+
+                        showAlert(
+                            '<strong>Filters Reset!</strong> Showing all CMS pages.',
+                            'info',
+                            'information-line',
+                            2500
+                        );
+                    }, 300);
+                });
+
+                // Auto-search on filter changes
+                $('#filterStatus, #filterType').on('change', function() {
+                    isFilterChange = true;
+                    $searchBtn.click();
+                });
+
+                // Enter key to search
+                $('#filterStatus, #filterType').on('keypress', function(e) {
+                    if (e.which === 13) {
+                        $searchBtn.click();
+                    }
+                });
+            }
+
+            /* ------------------------------------
+             * Initialize Tooltips
+             * ------------------------------------ */
+            function initTooltips() {
+                const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                tooltipTriggerList.map(function(tooltipTriggerEl) {
+                    return new bootstrap.Tooltip(tooltipTriggerEl, {
+                        trigger: 'hover'
+                    });
+                });
+            }
+
+            /* ------------------------------------
+             * Delete Page Handler
+             * ------------------------------------ */
+            function initDeleteHandlers() {
+                $(document).on('click', '.delete-page', function(e) {
+                    e.preventDefault();
+                    const $this = $(this);
+                    const url = $this.data('url');
+                    const pageTitle = $this.data('title');
+                    const pageType = $this.data('type');
+
+                    $.confirm({
+                        title: 'Confirm Delete',
+                        content: `Are you sure you want to delete the <strong>"${pageTitle}"</strong> page?<br>
+                                 <small class="text-muted">Type: ${pageType}</small>
+                                 <br><small class="text-muted">This action cannot be undone.</small>`,
+                        icon: 'ri-delete-bin-6-line',
+                        type: 'red',
+                        buttons: {
+                            confirm: {
+                                text: 'Delete',
+                                btnClass: 'btn-danger',
+                                action: function() {
+                                    $.ajax({
+                                        url: url,
+                                        type: 'DELETE',
+                                        data: {
+                                            _token: "{{ csrf_token() }}"
+                                        },
+                                        beforeSend: function() {
+                                            $this.prop('disabled', true).html(
+                                                '<span class="spinner-border spinner-border-sm"></span> Deleting...'
+                                            );
+                                        },
+                                        success: function(response) {
+                                            showAlert(
+                                                `<strong>Success!</strong> Page "${pageTitle}" deleted successfully.`,
+                                                'success',
+                                                'checkbox-circle-line',
+                                                4000
+                                            );
+                                            table.draw();
+                                            loadStatistics();
+                                        },
+                                        error: function(xhr) {
+                                            showAlert(
+                                                `<strong>Error!</strong> ${xhr.responseJSON?.message || 'Unable to delete page.'}`,
+                                                'danger',
+                                                'error-warning-line',
+                                                5000
+                                            );
+                                            $this.prop('disabled', false).html(
+                                                '<i class="ri-delete-bin-6-line"></i>'
+                                            );
+                                        }
+                                    });
+                                }
+                            },
+                            cancel: {
+                                text: 'Cancel',
+                                btnClass: 'btn-secondary'
+                            }
+                        }
+                    });
+                });
+            }
+
+            /* ------------------------------------
+             * Status Update Handler
+             * ------------------------------------ */
+            function initStatusHandlers() {
+                $(document).on('click', '.change-page-status', function(e) {
+                    e.preventDefault();
+                    const $this = $(this);
+                    const url = $this.data('url');
+                    const pageTitle = $this.data('title');
+                    const currentStatus = $this.data('status');
+                    const isActive = currentStatus === '1';
+                    const action = isActive ? 'deactivate' : 'activate';
+
+                    let warningMessage =
+                        `Are you sure you want to ${action} the <strong>"${pageTitle}"</strong> page?`;
+
+                    if (isActive) {
+                        warningMessage += `<br><span class="text-warning">
+                            <i class="ri-alert-line me-1"></i>
+                            Warning: Deactivating this page will make it inaccessible to users.
+                        </span>`;
+                    } else {
+                        warningMessage += `<br><span class="text-success">
+                            <i class="ri-check-line me-1"></i>
+                            This page will be accessible to users.
+                        </span>`;
+                    }
+
+                    warningMessage +=
+                        `<br><small class="text-muted">This will affect page visibility on the website.</small>`;
+
+                    $.confirm({
+                        title: `Confirm ${action.charAt(0).toUpperCase() + action.slice(1)}`,
+                        content: warningMessage,
+                        icon: isActive ? 'ri-eye-off-line' : 'ri-eye-line',
+                        type: isActive ? 'orange' : 'blue',
+                        buttons: {
+                            confirm: {
+                                text: isActive ? 'Deactivate' : 'Activate',
+                                btnClass: isActive ? 'btn-warning' : 'btn-primary',
+                                action: function() {
+                                    $.ajax({
+                                        url: url,
+                                        type: 'POST',
+                                        data: {
+                                            _token: "{{ csrf_token() }}",
+                                            _method: 'PUT'
+                                        },
+                                        beforeSend: function() {
+                                            $this.prop('disabled', true).html(
+                                                '<span class="spinner-border spinner-border-sm"></span> Processing...'
+                                            );
+                                        },
+                                        success: function(response) {
+                                            const message = isActive ?
+                                                `Page "${pageTitle}" has been deactivated.` :
+                                                `Page "${pageTitle}" has been activated successfully.`;
+
+                                            showAlert(
+                                                `<strong>Success!</strong> ${message}`,
+                                                'success',
+                                                'checkbox-circle-line',
+                                                4000
+                                            );
+                                            table.draw();
+                                            loadStatistics();
+                                        },
+                                        error: function(xhr) {
+                                            showAlert(
+                                                `<strong>Error!</strong> ${xhr.responseJSON?.message || `Unable to ${action} page.`}`,
+                                                'danger',
+                                                'error-warning-line',
+                                                5000
+                                            );
+                                            $this.prop('disabled', false);
+                                        }
+                                    });
+                                }
+                            },
+                            cancel: {
+                                text: 'Cancel',
+                                btnClass: 'btn-secondary'
+                            }
+                        }
+                    });
+                });
+            }
+
+            /* ------------------------------------
+             * Initialize Everything
+             * ------------------------------------ */
+            $(document).ready(function() {
+                initDateRangePicker();
+                initDataTable();
+                bindFilterEvents();
+                initTooltips();
+                initDeleteHandlers();
+                initStatusHandlers();
+                loadStatistics();
+
+                // Show welcome message on initial load
+                setTimeout(function() {
+                    if (isInitialLoad) {
+                        showAlert(
+                            '<strong>Welcome!</strong> CMS pages management system loaded successfully.',
+                            'info',
+                            'information-line',
+                            3000
+                        );
+                    }
+                }, 500);
             });
 
-            $('.filter-input').on('change', function() {
-                table.ajax.reload();
-            });
-
-            $('#resetFilterBtn').on('click', function() {
-                $('.filter-input').val('');
-                table.ajax.reload();
-            });
-
-        });
+        })(jQuery);
     </script>
 @endpush

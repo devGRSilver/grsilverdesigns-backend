@@ -186,8 +186,8 @@ function view_order_status(OrderStatus|string $status): string
             // OrderStatus::REFUNDED->value =>
             // '<span class="badge bg-label-success">Refunded</span>',
 
-            // OrderStatus::FAILED->value =>
-            // '<span class="badge bg-label-danger">Payment Failed</span>',
+            OrderStatus::FAILED->value =>
+            '<span class="badge bg-label-danger">Payment Failed</span>',
 
             default =>
             '<span class="badge bg-label-secondary">Unknown</span>',

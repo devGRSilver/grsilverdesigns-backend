@@ -65,10 +65,7 @@ class StaffController extends ResponseController
                 "{$this->resourceName} created successfully."
             );
         } catch (\Exception $e) {
-            return $this->errorResponse(
-                "Failed to create {$this->resourceName}.",
-                500
-            );
+            return $this->errorResponse($e->getMessage(), 500);
         }
     }
 

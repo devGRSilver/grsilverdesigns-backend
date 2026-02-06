@@ -2,6 +2,7 @@
 
 namespace Database\Seeders\Admin;
 
+use App\Constants\Constant;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 use App\Models\User;
@@ -46,18 +47,13 @@ class OrderSeeder extends Seeder
                 'discount_amount' => $discount,
                 'total_amount'    => $totalAmount,
                 'grand_total'     => $grandTotal,
-                'currency_code'   => 'INR',
+                'currency_code'   => Constant::DEFAULT_CURRENCY,
                 'status'          => OrderStatus::DELIVERED,
                 'shipping_method' => 'standard',
                 'tracking_number' => 'TRK-' . strtoupper(Str::random(10)),
                 'shipped_at'      => now()->subDays(rand(2, 5)),
                 'delivered_at'    => now(),
                 'paid_at'         => now(),
-
-                'customer_name'  => $user->name ?? "Customer {$i}",
-                'customer_email' => $user->email,
-                'customer_phone' => '98765432' . str_pad($i, 2, '0', STR_PAD_LEFT),
-
                 'notes' => 'Delivered successfully',
                 'metadata' => [
                     'source' => 'admin_seeder',
@@ -117,7 +113,7 @@ class OrderSeeder extends Seeder
                 'order_id'      => $order->id,
                 'transaction_id' => generateTransactionNumber(),
                 'amount'        => $grandTotal,
-                'currency_code' => 'INR',
+                'currency_code' => '$',
                 'status'        => TransactionStatus::COMPLETED,
                 'payment_method' => 'upi',
                 'payment_gateway' => 'razorpay',

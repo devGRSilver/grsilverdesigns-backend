@@ -64,6 +64,16 @@ class User extends Authenticatable
         return $this->hasMany(Order::class);
     }
 
+
+    protected function orderCount(): Attribute
+    {
+        return Attribute::make(
+            get: fn() => $this->orders_count
+                ?? $this->orders()->count()
+        );
+    }
+
+
     public function transactions()
     {
         return $this->hasMany(Transaction::class);

@@ -36,10 +36,6 @@ class Order extends Model
         'delivered_at',
         'expected_delivery_date',
 
-        'customer_name',
-        'customer_email',
-        'customer_phone',
-
         'notes',
         'metadata',
 
@@ -76,15 +72,23 @@ class Order extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function shippingAddress()
+    public function shipping_address()
     {
-        return $this->belongsTo(OrderAddress::class, 'shipping_address_id');
+        return $this->hasOne(OrderAddress::class, 'order_id', 'id')
+            ->where('type', 'shipping');
     }
 
-    public function billingAddress()
+    public function billing_address()
     {
-        return $this->belongsTo(OrderAddress::class, 'billing_address_id');
+        return $this->hasOne(OrderAddress::class, 'order_id', 'id')
+            ->where('type', 'billing');
     }
+
+
+
+
+
+
 
     public function items()
     {
