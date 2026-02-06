@@ -724,28 +724,37 @@
 
                                             <!-- CATEGORY -->
                                             <div class="col-md-6 mb-15">
-                                                <label class="form-label">Category <span
-                                                        class="text-danger">*</span></label>
-                                                <select name="category_id" class="form-control select2 main_category"
-                                                    required>
-                                                    <option value="">— Select Main Category —</option>
-                                                    @foreach ($categories as $item)
-                                                        <option value="{{ encrypt($item->id) }}">{{ $item->name }}
-                                                        </option>
+                                                <label for="filterParent" class="form-label fw-semibold mb-2">
+                                                    <i class="ri-folder-line me-1"></i> Category
+                                                </label>
+                                                <select id="filterParent" class="form-select select2" name="category_id">
+                                                    <option value="">All Categories</option>
+
+                                                    @php
+                                                        $grouped = $categories->groupBy('parent_name');
+                                                    @endphp
+
+                                                    @foreach ($grouped as $parent => $items)
+                                                        <optgroup label="{{ $parent ?? 'Main Categories' }}">
+                                                            @foreach ($items as $cat)
+                                                                <option value="{{ $cat->id }}">
+                                                                    {{ $cat->name }}
+                                                                </option>
+                                                            @endforeach
+                                                        </optgroup>
                                                     @endforeach
                                                 </select>
-                                                <small class="text-muted">Choose the main category for this product</small>
+
                                             </div>
 
                                             <!-- SUB CATEGORY -->
                                             <div class="col-md-6 mb-15">
-                                                <label class="form-label">Sub Category <span
+                                                <label class="form-label mt-3">Status <span
                                                         class="text-danger">*</span></label>
-                                                <select name="sub_category_id" class="form-control select2 sub_category"
-                                                    required>
-                                                    <option value="">— Select Sub Category —</option>
+                                                <select name="status" class="form-control" required>
+                                                    <option value="1">Published (Visible)</option>
+                                                    <option value="0">Draft (Hidden)</option>
                                                 </select>
-                                                <small class="text-muted">Displayed under the selected main category</small>
                                             </div>
 
                                             <!-- PRODUCT NAME -->
@@ -986,15 +995,6 @@
                                                 </select>
                                             </div>
 
-                                            <div class="col-md-6 mb-15">
-
-                                                <label class="form-label mt-3">Status <span
-                                                        class="text-danger">*</span></label>
-                                                <select name="status" class="form-control" required>
-                                                    <option value="1">Published (Visible)</option>
-                                                    <option value="0">Draft (Hidden)</option>
-                                                </select>
-                                            </div>
 
                                             <div class="col-md-6 mb-15">
 

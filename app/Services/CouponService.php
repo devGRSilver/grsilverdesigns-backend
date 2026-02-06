@@ -52,12 +52,23 @@ class CouponService
         }
 
         // Date Range Filter
-        if ($request->filled('date_range')) {
-            $dates = explode(' - ', $request->date_range);
+        if ($range = $request->input('date_range')) {
+            $dates = explode(' to ', $range);
+
             if (count($dates) === 2) {
-                $query->whereBetween('created_at', [trim($dates[0]), trim($dates[1])]);
+                $start = trim($dates[0]);
+                $end = trim($dates[1]);
+
+                $query->whereBetween('created_at', [
+                    "{$start} 00:00:00",
+                    "{$end} 23:59:59",
+                ]);
+            } elseif (count($dates) === 1) {
+                $start = trim($dates[0]);
+                $query->whereDate('created_at', $start);
             }
         }
+
 
         // Ordering
         $orderCol = $columns[$request->input('order.0.column')] ?? 'id';

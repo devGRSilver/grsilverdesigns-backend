@@ -91,6 +91,17 @@ class UserService
 
 
 
+        if ($request->filled('free_shipping')) {
+            $filteredQuery->where('free_shipping', $request->free_shipping);
+        }
+
+
+
+
+
+
+
+
         $recordsFiltered = (clone $filteredQuery)->count();
 
         $orderColIndex = $request->input('order.0.column', 0);

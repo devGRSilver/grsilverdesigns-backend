@@ -33,6 +33,27 @@ class CategoriesService
             ->get();
     }
 
+
+    public function getActiveSubCategories()
+    {
+        return  Category::query()
+            ->leftJoin('categories as parents', 'parents.id', '=', 'categories.parent_id')
+            ->where('categories.status', Constant::ACTIVE)
+            ->select(
+                'categories.id',
+                'categories.name',
+                'categories.parent_id',
+                'parents.name as parent_name'
+            )
+            ->orderByRaw('CASE WHEN parents.name IS NULL THEN 0 ELSE 1 END') // parent first
+            ->orderBy('parent_name')
+            ->orderBy('categories.name')
+            ->get();
+    }
+
+
+
+
     /**********************************************
      * DataTable with Permission-Based Actions
      **********************************************/

@@ -30,30 +30,32 @@
                         <div class="card border-0 shadow-sm">
                             <div class="card-body p-3 p-md-4">
                                 <div class="row g-3 align-items-end">
-
                                     <!-- Parent Category Filter -->
                                     <div class="col-lg-2 col-md-6">
                                         <label for="filterParent" class="form-label fw-semibold mb-2">
                                             <i class="ri-folder-line me-1"></i>Parent Category
                                         </label>
-                                        <select id="filterParent" class="form-select select2" name="parent_id">
+                                        <select id="filterParent" class="form-select select2" name="category_id">
                                             <option value="">All Categories</option>
-                                            @foreach ($categories ?? [] as $cat)
-                                                <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+
+                                            @php
+                                                $grouped = $categories->groupBy('parent_name');
+                                            @endphp
+
+                                            @foreach ($grouped as $parent => $items)
+                                                <optgroup label="{{ $parent ?? 'Main Categories' }}">
+                                                    @foreach ($items as $cat)
+                                                        <option value="{{ $cat->id }}">
+                                                            {{ $cat->name }}
+                                                        </option>
+                                                    @endforeach
+                                                </optgroup>
                                             @endforeach
                                         </select>
+
                                     </div>
 
-                                    <!-- Sub Category Filter -->
-                                    <div class="col-lg-2 col-md-6">
-                                        <label for="subCategory" class="form-label fw-semibold mb-2">
-                                            <i class="ri-folder-2-line me-1"></i>Sub Category
-                                        </label>
-                                        <select id="subCategory" class="form-select select2 sub_category"
-                                            name="sub_category_id">
-                                            <option value="">Select Sub Category</option>
-                                        </select>
-                                    </div>
+
 
                                     <!-- Stock Filter -->
                                     <div class="col-lg-2 col-md-6">
@@ -249,43 +251,6 @@
                 });
             }
 
-            /* ------------------------------------
-             * Load Subcategories
-             * ------------------------------------ */
-            function initSubcategoryLoader() {
-                $('#filterParent').on('change', function() {
-                    let categoryId = $(this).val();
-                    let $sub = $('#subCategory');
-
-                    if (!categoryId) {
-                        $sub.html('<option value="">Select Sub Category</option>').trigger('change');
-                        return;
-                    }
-
-                    $sub.html('<option value="">Loading...</option>').prop('disabled', true);
-
-                    let url = "{{ route('subcategories.ajax', ':id') }}".replace(':id', categoryId);
-
-                    $.get(url)
-                        .done(function(data) {
-                            $sub.html('<option value="">Select Sub Category</option>');
-                            $.each(data, function(_, item) {
-                                $sub.append(`<option value="${item.id}">${item.name}</option>`);
-                            });
-                            $sub.prop('disabled', false);
-                        })
-                        .fail(function() {
-                            $sub.html('<option value="">Error loading data</option>');
-                            $sub.prop('disabled', false);
-                            showAlert(
-                                'Error loading subcategories. Please try again.',
-                                'danger',
-                                'error-warning-line',
-                                3000
-                            );
-                        });
-                });
-            }
 
             /* ------------------------------------
              * Show Loading Overlay
@@ -576,79 +541,15 @@
                 });
             }
 
-            /* ------------------------------------
-             * Delete Product Handler
-             * ------------------------------------ */
-            function initDeleteHandlers() {
-                $(document).on('click', '.delete-product', function(e) {
-                    e.preventDefault();
-                    const $this = $(this);
-                    const url = $this.data('url');
-                    const productName = $this.data('name');
-
-                    $.confirm({
-                        title: 'Confirm Delete',
-                        content: `Are you sure you want to delete <strong>"${productName}"</strong>?<br><small class="text-muted">This will also delete all variants and images. This action cannot be undone.</small>`,
-                        icon: 'ri-delete-bin-6-line',
-                        type: 'red',
-                        buttons: {
-                            confirm: {
-                                text: 'Delete',
-                                btnClass: 'btn-danger',
-                                action: function() {
-                                    $.ajax({
-                                        url: url,
-                                        type: 'DELETE',
-                                        data: {
-                                            _token: "{{ csrf_token() }}"
-                                        },
-                                        beforeSend: function() {
-                                            $this.prop('disabled', true).html(
-                                                '<span class="spinner-border spinner-border-sm"></span> Deleting...'
-                                            );
-                                        },
-                                        success: function(response) {
-                                            showAlert(
-                                                `<strong>Success!</strong> Product "${productName}" deleted successfully.`,
-                                                'success',
-                                                'checkbox-circle-line',
-                                                4000
-                                            );
-                                            table.draw();
-                                        },
-                                        error: function(xhr) {
-                                            showAlert(
-                                                `<strong>Error!</strong> ${xhr.responseJSON?.message || 'Unable to delete product.'}`,
-                                                'danger',
-                                                'error-warning-line',
-                                                5000
-                                            );
-                                            $this.prop('disabled', false).html(
-                                                '<i class="ri-delete-bin-6-line"></i>'
-                                            );
-                                        }
-                                    });
-                                }
-                            },
-                            cancel: {
-                                text: 'Cancel',
-                                btnClass: 'btn-secondary'
-                            }
-                        }
-                    });
-                });
-            }
 
             /* ------------------------------------
              * Initialize Everything
              * ------------------------------------ */
             $(document).ready(function() {
                 initSelect2();
-                initSubcategoryLoader();
                 initDataTable();
                 bindFilterEvents();
                 initTooltips();
-                // initDeleteHandlers();
 
                 // Show welcome message on initial load
                 setTimeout(function() {

@@ -14,9 +14,9 @@ class ProductRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
-        $this->merge([
-            'category_id' => $this->category_id ? decrypt($this->category_id) : null,
-        ]);
+        // $this->merge([
+        //     'category_id' => $this->category_id ? decrypt($this->category_id) : null,
+        // ]);
     }
 
     public function rules(): array
@@ -26,7 +26,6 @@ class ProductRequest extends FormRequest
 
         $rules = [
             'category_id'      => 'required|integer|exists:categories,id',
-            'sub_category_id'  => 'nullable|integer|exists:categories,id',
             'product_name'     => 'required|string|max:255',
             'deleted_variants' => 'nullable|array',
             'deleted_variants.*' => 'integer|exists:product_variants,id',
@@ -127,7 +126,9 @@ class ProductRequest extends FormRequest
             ],
 
             'variants.*.quantity' => 'required|integer|min:0',
-            'variants.*.weight'   => 'required|numeric|min:1|max:10000',
+            'variants.*.weight' => 'required|numeric|min:0',
+
+
             'variants.*.images'   => 'nullable',
             'variant_options' => 'required',
             'variant_options.*.name' => 'required|string|max:50',

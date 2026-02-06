@@ -144,12 +144,13 @@ $(document).ready(function () {
      * ============================================================ */
     $(document).on("click", ".normal-call", function (e) {
         e.preventDefault();
-        const url = $(this).data("url");
+
+        const url = $(this).attr("href"); // 👈 href se URL
 
         if (url) {
             window.location.href = url;
         } else {
-            console.error("normal-call: URL missing");
+            console.error("URL missing");
         }
     });
 

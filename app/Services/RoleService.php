@@ -55,6 +55,14 @@ class RoleService
             });
         }
 
+
+        // Status Filter
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+
+
         /* ↕ Ordering */
         $orderIndex = $request->input('order.0.column', 0);
         $orderBy    = $columns[$orderIndex] ?? 'id';

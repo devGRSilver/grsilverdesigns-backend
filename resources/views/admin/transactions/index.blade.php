@@ -621,82 +621,6 @@
                 });
             }
 
-            /* ------------------------------------
-             * Status Update Handler
-             * ------------------------------------ */
-            function initStatusHandlers() {
-                $(document).on('click', '.update-status', function(e) {
-                    e.preventDefault();
-                    const $this = $(this);
-                    const url = $this.data('url');
-                    const transactionId = $this.data('id');
-                    const currentStatus = $this.data('status');
-
-                    $.confirm({
-                        title: 'Update Transaction Status',
-                        content: `
-                            <div class="mb-3">
-                                <label class="form-label">Select New Status</label>
-                                <select class="form-control" id="newStatus">
-                                    @foreach (TransactionStatus::cases() as $status)
-                                        <option value="{{ $status->value }}" ${currentStatus === '{{ $status->value }}' ? 'selected' : ''}>
-                                            {{ \Illuminate\Support\Str::headline($status->value) }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <p class="text-muted small">Updating transaction status may affect related orders.</p>
-                        `,
-                        icon: 'ri-exchange-dollar-line',
-                        type: 'blue',
-                        buttons: {
-                            confirm: {
-                                text: 'Update',
-                                btnClass: 'btn-primary',
-                                action: function() {
-                                    const newStatus = this.$content.find('#newStatus').val();
-
-                                    $.ajax({
-                                        url: url,
-                                        type: 'POST',
-                                        data: {
-                                            _token: "{{ csrf_token() }}",
-                                            status: newStatus
-                                        },
-                                        beforeSend: function() {
-                                            $this.prop('disabled', true).html(
-                                                '<span class="spinner-border spinner-border-sm"></span> Updating...'
-                                            );
-                                        },
-                                        success: function(response) {
-                                            showAlert(
-                                                `<strong>Success!</strong> Transaction status updated successfully.`,
-                                                'success',
-                                                'checkbox-circle-line',
-                                                4000
-                                            );
-                                            table.draw();
-                                        },
-                                        error: function(xhr) {
-                                            showAlert(
-                                                `<strong>Error!</strong> ${xhr.responseJSON?.message || 'Unable to update status.'}`,
-                                                'danger',
-                                                'error-warning-line',
-                                                5000
-                                            );
-                                            $this.prop('disabled', false);
-                                        }
-                                    });
-                                }
-                            },
-                            cancel: {
-                                text: 'Cancel',
-                                btnClass: 'btn-secondary'
-                            }
-                        }
-                    });
-                });
-            }
 
             /* ------------------------------------
              * Initialize Everything
@@ -707,7 +631,6 @@
                     initDataTable();
                     bindFilterEvents();
                     initTooltips();
-                    initStatusHandlers();
 
                     // Show welcome message on initial load
                     setTimeout(function() {

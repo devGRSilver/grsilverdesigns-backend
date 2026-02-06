@@ -59,7 +59,7 @@ class ProductController extends ResponseController
             'title'        => "{$this->resourceName} List",
             'resource'     => $this->resource,
             'resourceName' => $this->resourceName,
-            'categories'   => $this->categoriesService->getActiveParentCategories(),
+            'categories'   => $this->categoriesService->getActiveSubCategories(),
         ]);
     }
 
@@ -73,7 +73,7 @@ class ProductController extends ResponseController
     {
         return view("admin.{$this->resource}.add", [
             'title'      => "Add {$this->resourceName}",
-            'categories' => $this->categoriesService->getActiveParentCategories(),
+            'categories' => $this->categoriesService->getActiveSubCategories(),
             'attributes' => $this->attributeService->getActiveAttributes(),
         ]);
     }
@@ -94,9 +94,8 @@ class ProductController extends ResponseController
             return view("admin.{$this->resource}.edit", [
                 'title'           => "Edit {$this->resourceName}",
                 'product'         => $product,
-                'categories'      => $this->categoriesService->getActiveParentCategories(),
+                'categories'      => $this->categoriesService->getActiveSubCategories(),
                 'attributes'      => $this->attributeService->getActiveAttributes(),
-                'subCategories'   => $this->subCategoriesService->getActiveSubCategories($product->category_id),
                 'existingOptions' => $existingOptions,
             ]);
         } catch (\Exception $e) {

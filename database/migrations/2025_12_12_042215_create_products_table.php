@@ -16,10 +16,7 @@ return new class extends Migration
                 ->constrained('categories')
                 ->cascadeOnDelete();
 
-            $table->foreignId('sub_category_id')
-                ->nullable()
-                ->constrained('categories')
-                ->nullOnDelete();
+
 
             $table->enum('product_type', ['with_variant', 'without_variant'])
                 ->default('with_variant');
@@ -85,8 +82,7 @@ return new class extends Migration
 
             // Indexes
             $table->index(['status', 'is_featured']);
-            $table->index(['category_id', 'sub_category_id']);
-            $table->index(['selling_price', 'status']); // Fixed: was 'base_selling_price'
+            $table->index(['selling_price', 'status']);
         });
     }
 

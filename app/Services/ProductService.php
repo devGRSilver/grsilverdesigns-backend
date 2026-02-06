@@ -8,6 +8,7 @@ use App\Models\ProductImage;
 use App\Models\ProductVariant;
 use App\Models\VariantAttributeCombination;
 use App\Models\AttributeValue;
+use App\Models\Category;
 use App\Models\TempImage;
 use Exception;
 use Illuminate\Support\Facades\DB;
@@ -35,13 +36,21 @@ class ProductService
             });
         }
 
-        /** FILTERS */
-        if ($request->filled('category_id')) {
-            $query->where('category_id', $request->category_id);
-        }
 
-        if ($request->filled('sub_category_id')) {
-            $query->where('sub_category_id', $request->sub_category_id);
+        if ($request->filled('category_id')) {
+            $categoryId = $request->category_id;
+            $cate =   Category::where('id', $categoryId)->first();
+
+
+            if (isset($cate->parent_id)) {
+                $query->where(function ($q) use ($categoryId) {
+                    $q->where('sub_category_id', $categoryId);
+                });
+            } else {
+                $query->where(function ($q) use ($categoryId) {
+                    $q->where('category_id', $categoryId);
+                });
+            }
         }
 
         if ($request->filled('stock_quantity')) {

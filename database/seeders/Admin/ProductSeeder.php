@@ -18,7 +18,6 @@ class ProductSeeder extends Seeder
 
             $product = Product::create([
                 'category_id'        => 1,
-                'sub_category_id'    => 1,
                 'product_type'       => 'with_variant',
                 'name'               => 'Sample Product ' . $i,
                 'slug'               => Str::slug('Sample Product ' . $i),
@@ -38,7 +37,7 @@ class ProductSeeder extends Seeder
                 'seo_title'          => 'SEO Title ' . $i,
                 'seo_image'          => 'seo/image.jpg',
                 'seo_description'    => 'SEO Description ' . $i,
-                'seo_keywords'       => 'product, ecommerce',
+                'seo_keywords'       => json_encode(['product, ecommerce']),
                 'personalize'        => false,
                 'variant_attributes' => json_encode(['size', 'color']),
                 'min_price'          => 800,

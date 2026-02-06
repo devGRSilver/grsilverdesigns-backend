@@ -618,8 +618,6 @@
                     initDataTable();
                     bindFilterEvents();
                     initTooltips();
-                    // initDeleteHandlers();
-                    initStatusHandlers();
                     initCommentHandlers();
 
                     // Show welcome message on initial load

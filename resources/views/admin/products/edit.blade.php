@@ -41,37 +41,38 @@
                                         <div class="row">
 
                                             <!-- CATEGORY -->
+                                            <!-- PARENT CATEGORY -->
                                             <div class="col-md-6 mb-15">
-                                                <label class="form-label">Category <span
-                                                        class="text-danger">*</span></label>
-                                                <select name="category_id" class="form-control select2 main_category"
-                                                    required>
-                                                    <option value="">— Select Main Category —</option>
-                                                    @foreach ($categories as $item)
-                                                        <option value="{{ encrypt($item->id) }}"
-                                                            {{ $product->category_id == $item->id ? 'selected' : '' }}>
-                                                            {{ $item->name }}
+                                                <label for="filterParent" class="form-label fw-semibold mb-2">
+                                                    <i class="ri-folder-line me-1"></i>Parent Category
+                                                </label>
+
+                                                <select id="filterParent" class="form-select select2 parent_category"
+                                                    name="category_id" required>
+                                                    <option value="">— Select Parent Category —</option>
+
+                                                    @foreach ($categories as $parent)
+                                                        <option value="{{ $parent->id }}"
+                                                            {{ isset($product) && $product->category_id == $parent->id ? 'selected' : '' }}>
+                                                            {{ $parent->name }}
                                                         </option>
                                                     @endforeach
                                                 </select>
-                                                <small class="text-muted">Choose the main category for this product</small>
                                             </div>
+
 
                                             <!-- SUB CATEGORY -->
                                             <div class="col-md-6 mb-15">
-                                                <label class="form-label">Sub Category <span
+                                                <label class="form-label mt-3">Status <span
                                                         class="text-danger">*</span></label>
-                                                <select name="sub_category_id" class="form-control select2 sub_category"
-                                                    required>
-                                                    <option value="">— Select Sub Category —</option>
-                                                    @foreach ($subCategories as $sub)
-                                                        <option value="{{ $sub->id }}"
-                                                            {{ $product->sub_category_id == $sub->id ? 'selected' : '' }}>
-                                                            {{ $sub->name }}
-                                                        </option>
-                                                    @endforeach
+                                                <select name="status" class="form-control" required>
+                                                    <option value="1" {{ $product->status == 1 ? 'selected' : '' }}>
+                                                        Published
+                                                        (Visible)</option>
+                                                    <option value="0" {{ $product->status == 0 ? 'selected' : '' }}>
+                                                        Draft
+                                                        (Hidden)</option>
                                                 </select>
-                                                <small class="text-muted">Displayed under the selected main category</small>
                                             </div>
 
                                             <!-- PRODUCT NAME -->
@@ -309,7 +310,6 @@
                                         </div>
                                         <input type="file" name="seo_image" class="form-control" accept="image/*">
                                         <small class="text-muted">Recommended: 1200×630px (Social sharing)</small> </br>
-
                                         <label class="form-label mt-3">Meta Description</label>
                                         <textarea name="seo_description" class="form-control" rows="3"
                                             placeholder="Short SEO description (max 160 characters)">{{ old('seo_description', $product->seo_description) }}</textarea>
@@ -317,8 +317,10 @@
                                         <label class="form-label mt-3">Meta Keywords</label>
                                         <select name="seo_keywords[]" class="form-control select2-tags" multiple
                                             data-placeholder="Type keyword & press Enter">
-                                            @if ($product->seo_keywords)
-                                                @foreach (json_decode($product->seo_keywords) as $keyword)
+
+
+                                            @if ($product['seo_keywords'])
+                                                @foreach (json_decode($product['seo_keywords']) as $keyword)
                                                     <option value="{{ $keyword }}" selected>{{ $keyword }}
                                                     </option>
                                                 @endforeach

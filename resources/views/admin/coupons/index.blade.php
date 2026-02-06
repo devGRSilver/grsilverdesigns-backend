@@ -73,14 +73,13 @@
                                     <!-- Usage Status Filter -->
                                     @can('coupons.view.any')
                                         <div class="col-lg-2 col-md-6">
-                                            <label for="filterUsage" class="form-label fw-semibold mb-2">
-                                                <i class="ri-user-line me-1"></i>Usage Status
+                                            <label for="filterFreeShipping" class="form-label fw-semibold mb-2">
+                                                <i class="ri-user-line me-1"></i>Free Shipping
                                             </label>
-                                            <select id="filterUsage" class="form-select" name="usage_status">
+                                            <select id="filterFreeShipping" class="form-select" name="free_shipping">
                                                 <option value="">All</option>
-                                                <option value="available">Available</option>
-                                                <option value="fully_used">Fully Used</option>
-                                                <option value="expired">Expired</option>
+                                                <option value="1">Free Shipping </option>
+                                                <option value="0"> No </option>
                                             </select>
                                         </div>
                                     @endcan
@@ -388,7 +387,7 @@
                             data: function(d) {
                                 d.status = $('#filterStatus').val();
                                 d.type = $('#filterType').val();
-                                d.usage_status = $('#filterUsage').val();
+                                d.free_shipping = $('#filterFreeShipping').val();
                                 d.date_range = $('#rangeCalendar').val();
                                 d._token = "{{ csrf_token() }}";
                             },
@@ -597,165 +596,86 @@
                 });
             }
 
-            /* ------------------------------------
-             * Delete Coupon Handler
-             * ------------------------------------ */
-            function initDeleteHandlers() {
-                $(document).on('click', '.delete-coupon', function(e) {
-                    e.preventDefault();
-                    const $this = $(this);
-                    const url = $this.data('url');
-                    const couponCode = $this.data('code');
-                    const couponName = $this.data('name');
-                    const usageCount = $this.data('usage') || 0;
-
-                    let warningMessage =
-                        `Are you sure you want to delete coupon <strong>"${couponCode}"</strong>?`;
-
-                    if (usageCount > 0) {
-                        warningMessage += `<br><span class="text-danger">
-                            <i class="ri-alert-line me-1"></i>
-                            Warning: This coupon has been used ${usageCount} time(s). 
-                            Deleting it may affect order history.
-                        </span>`;
-                    }
-
-                    warningMessage += `<br><small class="text-muted">This action cannot be undone.</small>`;
-
-                    $.confirm({
-                        title: 'Confirm Delete',
-                        content: warningMessage,
-                        icon: 'ri-delete-bin-6-line',
-                        type: 'red',
-                        buttons: {
-                            confirm: {
-                                text: 'Delete',
-                                btnClass: 'btn-danger',
-                                action: function() {
-                                    $.ajax({
-                                        url: url,
-                                        type: 'DELETE',
-                                        data: {
-                                            _token: "{{ csrf_token() }}"
-                                        },
-                                        beforeSend: function() {
-                                            $this.prop('disabled', true).html(
-                                                '<span class="spinner-border spinner-border-sm"></span> Deleting...'
-                                            );
-                                        },
-                                        success: function(response) {
-                                            showAlert(
-                                                `<strong>Success!</strong> Coupon "${couponCode}" deleted successfully.`,
-                                                'success',
-                                                'checkbox-circle-line',
-                                                4000
-                                            );
-                                            table.draw();
-                                        },
-                                        error: function(xhr) {
-                                            showAlert(
-                                                `<strong>Error!</strong> ${xhr.responseJSON?.message || 'Unable to delete coupon.'}`,
-                                                'danger',
-                                                'error-warning-line',
-                                                5000
-                                            );
-                                            $this.prop('disabled', false).html(
-                                                '<i class="ri-delete-bin-6-line"></i>'
-                                            );
-                                        }
-                                    });
-                                }
-                            },
-                            cancel: {
-                                text: 'Cancel',
-                                btnClass: 'btn-secondary'
-                            }
-                        }
-                    });
-                });
-            }
 
             /* ------------------------------------
              * Status Update Handler
              * ------------------------------------ */
-            function initStatusHandlers() {
-                $(document).on('click', '.change-coupon-status', function(e) {
-                    e.preventDefault();
-                    const $this = $(this);
-                    const url = $this.data('url');
-                    const couponCode = $this.data('code');
-                    const currentStatus = $this.data('status');
-                    const isActive = currentStatus === '1';
-                    const action = isActive ? 'deactivate' : 'activate';
+            $(document).on('click', '.change-coupon-status', function(e) {
+                e.preventDefault();
+                const $this = $(this);
+                const url = $this.data('url');
+                const couponCode = $this.data('code');
+                const currentStatus = $this.data('status');
+                const isActive = currentStatus === '1';
+                const action = isActive ? 'deactivate' : 'activate';
 
-                    let warningMessage =
-                        `Are you sure you want to ${action} coupon <strong>"${couponCode}"</strong>?`;
+                let warningMessage =
+                    `Are you sure you want to ${action} coupon <strong>"${couponCode}"</strong>?`;
 
-                    if (isActive) {
-                        warningMessage += `<br><span class="text-warning">
+                if (isActive) {
+                    warningMessage += `<br><span class="text-warning">
                             <i class="ri-alert-line me-1"></i>
                             Warning: Deactivating this coupon will make it unavailable for future orders.
                         </span>`;
-                    }
+                }
 
-                    warningMessage +=
-                        `<br><small class="text-muted">This will affect coupon availability for customers.</small>`;
+                warningMessage +=
+                    `<br><small class="text-muted">This will affect coupon availability for customers.</small>`;
 
-                    $.confirm({
-                        title: `Confirm ${action.charAt(0).toUpperCase() + action.slice(1)}`,
-                        content: warningMessage,
-                        icon: isActive ? 'ri-stop-circle-line' : 'ri-play-circle-line',
-                        type: isActive ? 'orange' : 'blue',
-                        buttons: {
-                            confirm: {
-                                text: isActive ? 'Deactivate' : 'Activate',
-                                btnClass: isActive ? 'btn-warning' : 'btn-primary',
-                                action: function() {
-                                    $.ajax({
-                                        url: url,
-                                        type: 'POST',
-                                        data: {
-                                            _token: "{{ csrf_token() }}",
-                                            _method: 'PUT'
-                                        },
-                                        beforeSend: function() {
-                                            $this.prop('disabled', true).html(
-                                                '<span class="spinner-border spinner-border-sm"></span> Processing...'
-                                            );
-                                        },
-                                        success: function(response) {
-                                            const message = isActive ?
-                                                `Coupon "${couponCode}" has been deactivated.` :
-                                                `Coupon "${couponCode}" has been activated successfully.`;
+                $.confirm({
+                    title: `Confirm ${action.charAt(0).toUpperCase() + action.slice(1)}`,
+                    content: warningMessage,
+                    icon: isActive ? 'ri-stop-circle-line' : 'ri-play-circle-line',
+                    type: isActive ? 'orange' : 'blue',
+                    buttons: {
+                        confirm: {
+                            text: isActive ? 'Deactivate' : 'Activate',
+                            btnClass: isActive ? 'btn-warning' : 'btn-primary',
+                            action: function() {
+                                $.ajax({
+                                    url: url,
+                                    type: 'POST',
+                                    data: {
+                                        _token: "{{ csrf_token() }}",
+                                        _method: 'PUT'
+                                    },
+                                    beforeSend: function() {
+                                        $this.prop('disabled', true).html(
+                                            '<span class="spinner-border spinner-border-sm"></span> Processing...'
+                                        );
+                                    },
+                                    success: function(response) {
+                                        const message = isActive ?
+                                            `Coupon "${couponCode}" has been deactivated.` :
+                                            `Coupon "${couponCode}" has been activated successfully.`;
 
-                                            showAlert(
-                                                `<strong>Success!</strong> ${message}`,
-                                                'success',
-                                                'checkbox-circle-line',
-                                                4000
-                                            );
-                                            table.draw();
-                                        },
-                                        error: function(xhr) {
-                                            showAlert(
-                                                `<strong>Error!</strong> ${xhr.responseJSON?.message || `Unable to ${action} coupon.`}`,
-                                                'danger',
-                                                'error-warning-line',
-                                                5000
-                                            );
-                                            $this.prop('disabled', false);
-                                        }
-                                    });
-                                }
-                            },
-                            cancel: {
-                                text: 'Cancel',
-                                btnClass: 'btn-secondary'
+                                        showAlert(
+                                            `<strong>Success!</strong> ${message}`,
+                                            'success',
+                                            'checkbox-circle-line',
+                                            4000
+                                        );
+                                        table.draw();
+                                    },
+                                    error: function(xhr) {
+                                        showAlert(
+                                            `<strong>Error!</strong> ${xhr.responseJSON?.message || `Unable to ${action} coupon.`}`,
+                                            'danger',
+                                            'error-warning-line',
+                                            5000
+                                        );
+                                        $this.prop('disabled', false);
+                                    }
+                                });
                             }
+                        },
+                        cancel: {
+                            text: 'Cancel',
+                            btnClass: 'btn-secondary'
                         }
-                    });
+                    }
                 });
-            }
+            });
 
             /* ------------------------------------
              * Initialize Everything
@@ -766,8 +686,6 @@
                     initDataTable();
                     bindFilterEvents();
                     initTooltips();
-                    // initDeleteHandlers();
-                    initStatusHandlers();
 
                     // Show welcome message on initial load
                     setTimeout(function() {

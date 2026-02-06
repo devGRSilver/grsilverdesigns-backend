@@ -649,8 +649,6 @@
                 initDataTable();
                 bindFilterEvents();
                 initTooltips();
-                // initDeleteHandlers();
-                initStatusHandlers();
                 initNewsletterHandlers();
 
                 // Show welcome message on initial load
