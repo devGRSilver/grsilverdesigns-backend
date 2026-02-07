@@ -265,7 +265,7 @@ class AttributeService
 
             // Delete button
             if ($canDelete) {
-                $actionButtons[] = btn_delete(route($this->module . '.delete', encrypt($attribute->id)), true);
+                $actionButtons[] = btn_delete(route($this->module . '.delete', encrypt($attribute->id)));
             }
 
             return [

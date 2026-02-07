@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use Database\Seeders\Admin\AttributeAndValueSeeder;
+use Database\Seeders\Admin\BannerSeeder;
 use Database\Seeders\Admin\BlogSeeder;
 use Database\Seeders\Admin\CategorySeeder;
 use Database\Seeders\Admin\ContentSeeder;
@@ -43,6 +44,7 @@ class DatabaseSeeder extends Seeder
             OrderSeeder::class,
             NotificationSeeder::class,
             CouponSeeder::class,
+            BannerSeeder::class,
         ]);
     }
 }

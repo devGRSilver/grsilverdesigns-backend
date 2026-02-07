@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\{
     ProductController,
     MetalController,
     AttributeController,
+    BannerController,
     BlogController,
     ContentController,
     DashboardController,
@@ -676,5 +677,51 @@ Route::prefix('admin')->middleware('auth:admin')->group(function () {
         Route::get('revenue', [ReportController::class, 'revenue'])
             ->name('revenue')
             ->middleware('permission:reports.revenue,admin');
+    });
+
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Banners Module
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('banners')->name('banners.')->group(function () {
+        Route::get('/', [BannerController::class, 'index'])
+            ->name('index')
+            ->middleware('permission:banners.view.any');
+
+        Route::get('create', [BannerController::class, 'create'])
+            ->name('create')
+            ->middleware('permission:banners.create');
+
+        Route::post('/', [BannerController::class, 'store'])
+            ->name('store')
+            ->middleware('permission:banners.create');
+
+        Route::get('{banner}/edit', [BannerController::class, 'edit'])
+            ->name('edit')
+            ->middleware('permission:banners.update');
+
+        Route::put('{banner}', [BannerController::class, 'update'])
+            ->name('update')
+            ->middleware('permission:banners.update');
+
+        Route::patch('{banner}/status', [BannerController::class, 'updateStatus'])
+            ->name('status.update')
+            ->middleware('permission:banners.update.status');
+
+        Route::delete('{banner}', [BannerController::class, 'destroy'])
+            ->name('delete')
+            ->middleware('permission:banners.delete');
+
+        Route::get('{banner}', [BannerController::class, 'show'])
+            ->name('show')
+            ->middleware('permission:banners.view');
+
+
+        Route::patch('{banner}/status', [BannerController::class, 'status'])
+            ->name('status')
+            ->middleware('permission:banners.view');
     });
 });
