@@ -10,10 +10,18 @@
             </div>
         @endif
 
-        <form class="validate_form"
+        {{-- <form class="validate_form"
             action="{{ isset($coupon) ? route('coupons.update', encrypt($coupon->id)) : route('coupons.store') }}"
             method="POST" enctype="multipart/form-data" id="couponForm">
+            @csrf --}}
+
+
+
+        <form class="validate_form" action="{{ route('coupons.store') }}" method="POST">
             @csrf
+
+
+
             @if (isset($coupon))
                 @method('PUT')
             @endif
@@ -50,7 +58,8 @@
                         <option value="">Select Type</option>
                         @foreach ($couponTypes as $value => $label)
                             <option value="{{ $value }}"
-                                {{ old('type', $coupon->type ?? '') == $value ? 'selected' : '' }}>{{ $label }}
+                                {{ old('type', $coupon->type ?? '') == $value ? 'selected' : '' }}>
+                                {{ $label }}
                             </option>
                         @endforeach
                     </select>
@@ -181,11 +190,7 @@
 <script>
     $(document).ready(function() {
 
-        // Select2 for normal selects
-        $('.select2').select2({
-            width: '100%',
-            dropdownParent: $('#couponForm').closest('.modal, .card-body'),
-        });
+
 
         // Date Range Picker
         flatpickr("#dateRange", {

@@ -1,247 +1,279 @@
-<div class="card border-0 shadow">
-    <div class="card-header bg-white border-bottom py-3">
-        <div class="d-flex align-items-center justify-content-between">
-            <h5 class="mb-0 fw-semibold p-1">{{ $title ?? 'Coupon Details' }}</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">{{ $title ?? 'Edit Coupon' }}</h5>
     </div>
 
-    <div class="card-body p-4">
-        <!-- Header -->
-        <div class="d-flex flex-column flex-md-row align-items-start justify-content-between mb-5">
-            <div class="d-flex align-items-center mb-3 mb-md-0">
-                <div class="bg-primary bg-gradient p-3 rounded-3 me-3">
-                    <h3 class="mb-0 text-white font-monospace">{{ $coupon->code }}</h3>
-                </div>
-                <div>
-                    <h4 class="fw-semibold mb-1">{{ $coupon->name }}</h4>
-                    <p class="text-muted mb-0">{{ $coupon->description ?? 'No description provided' }}</p>
-                </div>
+    <div class="card-body pt-15">
+        @if (session('debug'))
+            <div class="alert alert-info">
+                <strong>Debug:</strong> {{ session('debug') }}
             </div>
-            <div>
-                {!! status_dropdown($coupon->status, [
-                    'id' => $coupon->id,
-                    'url' => route('coupons.status', encrypt($coupon->id)),
-                    'method' => 'PUT',
-                ]) !!}
-            </div>
-        </div>
+        @endif
 
-        <div class="row g-4">
-            <!-- Left Column -->
-            <div class="col-lg-6">
-                <!-- Basic Information -->
-                <div class="card border">
-                    <div class="bg-light p-2">
-                        <h6 class="mb-0 fw-semibold p-1">Basic Information</h6>
-                    </div>
-                    <div class="card-body">
-                        <dl class="row mb-2 mt-2">
-                            <dt class="col-sm-5 text-muted">Type</dt>
-                            <dd class="col-sm-7">
-                                @if ($coupon->type === 'percentage')
-                                    <span class="badge bg-info">Percentage</span>
-                                @else
-                                    <span class="badge bg-success">Fixed Amount</span>
-                                @endif
-                            </dd>
+        <form class="validate_form" action="{{ route('coupons.update', encrypt($coupon->id)) }}" method="POST"
+            enctype="multipart/form-data" id="couponForm">
+            @csrf
+            @method('PUT')
 
-                            <dt class="col-sm-5 text-muted">Value</dt>
-                            <dd class="col-sm-7">
-                                <span class="fw-bold fs-5">
-                                    @if ($coupon->type === 'percentage')
-                                        {{ $coupon->value }}%
-                                    @else
-                                        ${{ number_format($coupon->value, 2) }}
-                                    @endif
-                                </span>
-                            </dd>
+            <div class="row">
 
-                            <dt class="col-sm-5 text-muted">Start Date</dt>
-                            <dd class="col-sm-7">{{ $coupon->starts_at->format('d M Y, h:i A') }}</dd>
+                <!-- Coupon Code -->
+                <div class="col-md-6 mb-15">
+                    <label class="form-label">Coupon Code <span class="text-danger">*</span></label>
+                    <input type="text" name="code" class="form-control"
+                        placeholder="Enter coupon code (e.g., WELCOME20)" required
+                        value="{{ old('code', $coupon->code) }}">
+                    <small class="form-text text-muted">Only uppercase letters, numbers, hyphens, and underscores
+                        allowed</small>
+                </div>
 
-                            <dt class="col-sm-5 text-muted">Expiry Date</dt>
-                            <dd class="col-sm-7">{{ $coupon->expires_at->format('d M Y, h:i A') }}</dd>
+                <!-- Coupon Name -->
+                <div class="col-md-6 mb-15">
+                    <label class="form-label">Coupon Name <span class="text-danger">*</span></label>
+                    <input type="text" name="name" class="form-control" placeholder="Enter coupon name" required
+                        value="{{ old('name', $coupon->name) }}">
+                </div>
 
-                            <dt class="col-sm-5 text-muted">Days Remaining</dt>
-                            <dd class="col-sm-7">
-                                @if ($coupon->expires_at->isFuture())
-                                    <span class="badge bg-info">{{ $coupon->expires_at->diffInDays(now()) }} days</span>
-                                @else
-                                    <span class="badge bg-danger">Expired</span>
-                                @endif
-                            </dd>
-                        </dl>
+                <!-- Description -->
+                <div class="col-md-12 mb-15">
+                    <label class="form-label">Description</label>
+                    <textarea name="description" class="form-control" rows="2" placeholder="Enter coupon description">{{ old('description', $coupon->description) }}</textarea>
+                </div>
+
+                <!-- Type -->
+                <div class="col-md-6 mb-15">
+                    <label class="form-label">Discount Type <span class="text-danger">*</span></label>
+                    <select name="type" class="form-control" required id="discountType">
+                        <option value="">Select Type</option>
+                        @foreach ($couponTypes as $value => $label)
+                            <option value="{{ $value }}"
+                                {{ old('type', $coupon->type) == $value ? 'selected' : '' }}>{{ $label }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <!-- Value -->
+                <div class="col-md-6 mb-15">
+                    <label class="form-label" id="valueLabel">Discount Value <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                        <input type="number" name="value" class="form-control" placeholder="Enter value"
+                            step="0.01" required value="{{ old('value', $coupon->value) }}" id="discountValue">
+                        <span class="input-group-text" id="valueSuffix">
+                            {{ $coupon->type === 'percentage' ? '%' : '$' }}
+                        </span>
                     </div>
                 </div>
 
-                <!-- Restrictions -->
-                <div class="card border mt-3">
-                    <div class="bg-light p-2">
-                        <h6 class="mb-0 fw-semibold p-1">Conditions</h6>
-                    </div>
-                    <div class="card-body">
-                        <dl class="row mt-2">
-                            <dt class="col-sm-7 text-muted">Minimum Purchase</dt>
-                            <dd class="col-sm-5 text-end">
-                                @if ($coupon->min_purchase_amount)
-                                    <span
-                                        class="fw-semibold">${{ number_format($coupon->min_purchase_amount, 2) }}</span>
-                                @else
-                                    <span class="text-muted">None</span>
-                                @endif
-                            </dd>
-
-                            <dt class="col-sm-7 text-muted">Minimum Items</dt>
-                            <dd class="col-sm-5 text-end">
-                                <span
-                                    class="fw-semibold">{{ $coupon->min_items ? $coupon->min_items . ' items' : 'None' }}</span>
-                            </dd>
-
-                            <dt class="col-sm-7 text-muted">First Order Only</dt>
-                            <dd class="col-sm-5 text-end">
-                                @if ($coupon->first_order_only)
-                                    <span class="badge bg-info">Yes</span>
-                                @else
-                                    <span class="badge bg-secondary">No</span>
-                                @endif
-                            </dd>
-
-                            <dt class="col-sm-7 text-muted">Free Shipping</dt>
-                            <dd class="col-sm-5 text-end">
-                                @if ($coupon->free_shipping)
-                                    <span class="badge bg-success">Yes</span>
-                                @else
-                                    <span class="badge bg-secondary">No</span>
-                                @endif
-                            </dd>
-                        </dl>
-                    </div>
+                <!-- Usage Limit -->
+                <div class="col-md-6 mb-15">
+                    <label class="form-label">Usage Limit</label>
+                    <input type="number" name="usage_limit" class="form-control"
+                        placeholder="Leave empty for unlimited" min="1"
+                        value="{{ old('usage_limit', $coupon->usage_limit) }}">
+                    <small class="form-text text-muted">Maximum number of times this coupon can be used</small>
                 </div>
-            </div>
 
-            <!-- Right Column -->
-            <div class="col-lg-6">
-                <!-- Usage Statistics -->
-                <div class="card border">
-                    <div class="bg-light p-2">
-                        <h6 class="mb-0 fw-semibold p-1">Usage Statistics</h6>
+                <!-- User Limit -->
+                <div class="col-md-6 mb-15">
+                    <label class="form-label">User Limit</label>
+                    <input type="number" name="user_limit" class="form-control" placeholder="Max uses per user"
+                        min="1" value="{{ old('user_limit', $coupon->user_limit) }}">
+                    <small class="form-text text-muted">Maximum uses per individual user</small>
+                </div>
+
+                <!-- Minimum Purchase Amount -->
+                <div class="col-md-6 mb-15">
+                    <label class="form-label">Minimum Purchase Amount</label>
+                    <div class="input-group">
+                        <span class="input-group-text">$</span>
+                        <input type="number" name="min_purchase_amount" class="form-control" placeholder="0.00"
+                            step="0.01" min="0"
+                            value="{{ old('min_purchase_amount', $coupon->min_purchase_amount) }}">
                     </div>
-                    <div class="card-body">
-                        <div class="row text-center mt-2 mb-4">
-                            <div class="col-6">
-                                <div class="p-3 bg-light rounded">
-                                    <h2 class="text-primary mb-1">{{ $coupon->usage_count }}</h2>
-                                    <small class="text-muted">Times Used</small>
-                                </div>
+                    <small class="form-text text-muted">Minimum cart total required to apply coupon</small>
+                </div>
+
+                <!-- Status -->
+                <div class="col-md-6 mb-15">
+                    <label class="form-label">Status</label>
+                    <select name="status" class="form-control" required>
+                        <option value="1" {{ old('status', $coupon->status) == '1' ? 'selected' : '' }}>
+                            Active
+                        </option>
+                        <option value="0" {{ old('status', $coupon->status) == '0' ? 'selected' : '' }}>
+                            Inactive
+                        </option>
+                    </select>
+                </div>
+
+                <!-- Date Range -->
+                <div class="col-md-6 mb-15">
+                    <label class="form-label">Date Range <span class="text-danger">*</span></label>
+                    <input type="text" id="dateRange" class="form-control" name="date_range"
+                        placeholder="Select start and expiry date" required
+                        value="{{ $coupon->starts_at->format('Y-m-d') . ' to ' . $coupon->expires_at->format('Y-m-d') }}">
+                    <input type="hidden" name="starts_at" id="starts_at"
+                        value="{{ old('starts_at', $coupon->starts_at->format('Y-m-d')) }}">
+                    <input type="hidden" name="expires_at" id="expires_at"
+                        value="{{ old('expires_at', $coupon->expires_at->format('Y-m-d')) }}">
+                </div>
+
+
+
+                {{-- <!-- Included Categories -->
+                <div class="col-md-6 mb-15">
+                    <label class="form-label">Included Categories</label>
+                    <select name="included_categories[]" class="form-control select2" multiple
+                        data-placeholder="Select specific categories">
+                        @if (isset($categories) && $categories)
+                            @foreach ($categories as $category)
+                                <option value="{{ $category->id }}"
+                                    {{ is_array($coupon->included_categories) && in_array($category->id, $coupon->included_categories) ? 'selected' : '' }}>
+                                    {{ $category->name }}
+                                </option>
+                            @endforeach
+                        @endif
+                    </select>
+                    <small class="form-text text-muted">Leave empty for all categories</small>
+                </div> --}}
+
+
+                <!-- Checkboxes -->
+                <div class="col-md-12 mb-15">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-check mt-2">
+                                <input class="form-check-input" type="checkbox" name="first_order_only"
+                                    id="firstOrderCheckbox" value="1"
+                                    {{ old('first_order_only', $coupon->first_order_only) ? 'checked' : '' }}>
+                                <label class="form-check-label" for="firstOrderCheckbox">
+                                    First Order Only
+                                </label>
                             </div>
-                            <div class="col-6">
-                                <div class="p-3 bg-light rounded">
-                                    <h2 class="text-success mb-1">
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-check mt-2">
+                                <input class="form-check-input" type="checkbox" name="free_shipping"
+                                    id="freeShippingCheckbox" value="1"
+                                    {{ old('free_shipping', $coupon->free_shipping) ? 'checked' : '' }}>
+                                <label class="form-check-label" for="freeShippingCheckbox">
+                                    Free Shipping
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Usage Information (Read-only) -->
+                <div class="col-md-12 mb-15">
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h6 class="mb-3">Usage Information</h6>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <p class="mb-1"><strong>Total Usage:</strong> {{ $coupon->usage_count }} times
+                                    </p>
+                                </div>
+                                <div class="col-md-4">
+                                    <p class="mb-1"><strong>Remaining Uses:</strong>
                                         @if ($coupon->usage_limit)
-                                            {{ $coupon->usage_limit - $coupon->usage_count }}
+                                            {{ $coupon->usage_limit - $coupon->usage_count }} times
                                         @else
-                                            ∞
+                                            Unlimited
                                         @endif
-                                    </h2>
-                                    <small class="text-muted">Remaining Uses</small>
+                                    </p>
+                                </div>
+                                <div class="col-md-4">
+                                    <p class="mb-1"><strong>Created:</strong>
+                                        {{ $coupon->created_at->format('d M Y') }}</p>
                                 </div>
                             </div>
                         </div>
-
-                        @if ($coupon->usage_limit)
-                            <div class="mb-4">
-                                <div class="d-flex justify-content-between mb-1">
-                                    <small class="text-muted">Usage Progress</small>
-                                    <small
-                                        class="fw-semibold">{{ $coupon->usage_count }}/{{ $coupon->usage_limit }}</small>
-                                </div>
-                                <div class="progress" style="height: 8px;">
-                                    <div class="progress-bar" role="progressbar"
-                                        style="width: {{ ($coupon->usage_count / $coupon->usage_limit) * 100 }}%"
-                                        aria-valuenow="{{ $coupon->usage_count }}" aria-valuemin="0"
-                                        aria-valuemax="{{ $coupon->usage_limit }}">
-                                    </div>
-                                </div>
-                            </div>
-                        @endif
-
-                        <dl class="row mt-2">
-                            <dt class="col-sm-7 text-muted">Usage Limit</dt>
-                            <dd class="col-sm-5 text-end">
-                                <span
-                                    class="fw-semibold">{{ $coupon->usage_limit ? $coupon->usage_limit . ' times' : 'Unlimited' }}</span>
-                            </dd>
-
-                            <dt class="col-sm-7 text-muted">User Limit</dt>
-                            <dd class="col-sm-5 text-end">
-                                <span
-                                    class="fw-semibold">{{ $coupon->user_limit ? $coupon->user_limit . ' per user' : 'Unlimited' }}</span>
-                            </dd>
-                        </dl>
                     </div>
                 </div>
 
-                <!-- Applicability -->
-                <div class="card border mt-3">
-                    <div class="bg-light p-2">
-                        <h6 class="mb-0 fw-semibold p-1">Applicability</h6>
-                    </div>
-                    <div class="card-body">
-                        <dl class="row mt-2">
-                            <dt class="col-sm-7 text-muted">Included Products</dt>
-                            <dd class="col-sm-5 text-end">
-                                @if ($coupon->included_products && count($coupon->included_products) > 0)
-                                    <span class="badge bg-info">{{ count($coupon->included_products) }} products</span>
-                                @else
-                                    <span class="badge bg-secondary">All Products</span>
-                                @endif
-                            </dd>
-
-
-
-                        </dl>
-                    </div>
-                </div>
             </div>
-        </div>
 
-        <!-- Metadata -->
-        <div class="card border mt-4">
-            <div class="bg-light p-2">
-                <h6 class="mb-0 fw-semibold p-1">Metadata</h6>
+            <div class="mt-3">
+                <button type="submit" class="btn btn-primary">Update Coupon</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>
-            <div class="card-body">
-                <div class="row mt-3">
-                    <div class="col-md-3 col-6 mb-3 mb-md-0">
-                        <p class="text-muted small mb-1">Created At</p>
-                        <p class="fw-semibold mb-0">{{ $coupon->created_at->format('d M Y, h:i A') }}</p>
-                    </div>
-                    <div class="col-md-3 col-6 mb-3 mb-md-0">
-                        <p class="text-muted small mb-1">Updated At</p>
-                        <p class="fw-semibold mb-0">{{ $coupon->updated_at->format('d M Y, h:i A') }}</p>
-                    </div>
-                    <div class="col-md-3 col-6">
-                        <p class="text-muted small mb-1">Created By</p>
-                        <p class="fw-semibold mb-0">
-                            @if ($coupon->created_by)
-                                Admin #{{ $coupon->created_by }}
-                            @else
-                                System
-                            @endif
-                        </p>
-                    </div>
-                    <div class="col-md-3 col-6">
-                        <p class="text-muted small mb-1">Total Orders</p>
-                        <p class="fw-semibold mb-0">{{ $coupon->usage_count }} orders</p>
-                    </div>
-                </div>
-            </div>
-        </div>
 
-        <!-- Footer -->
-        <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
-            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
-        </div>
+        </form>
     </div>
 </div>
+
+<script>
+    $(document).ready(function() {
+
+
+
+        // Date Range Picker with existing dates
+        flatpickr("#dateRange", {
+            mode: "range",
+            dateFormat: "Y-m-d",
+            altInput: true,
+            altFormat: "F j, Y",
+            defaultDate: [
+                "{{ $coupon->starts_at->format('Y-m-d') }}",
+                "{{ $coupon->expires_at->format('Y-m-d') }}"
+            ],
+            onChange: function(selectedDates, dateStr, instance) {
+                if (selectedDates.length === 2) {
+                    // Set hidden inputs
+                    $('#starts_at').val(selectedDates[0].toISOString().split('T')[0]);
+                    $('#expires_at').val(selectedDates[1].toISOString().split('T')[0]);
+                } else if (selectedDates.length === 1) {
+                    $('#starts_at').val(selectedDates[0].toISOString().split('T')[0]);
+                    $('#expires_at').val('');
+                }
+            }
+        });
+
+        // Toggle value suffix based on discount type
+        function updateValueLabel() {
+            const type = $('#discountType').val();
+            const suffix = $('#valueSuffix');
+            const label = $('#valueLabel');
+            const valueInput = $('#discountValue');
+
+            if (type === 'percentage') {
+                suffix.text('%');
+                label.text('Discount Percentage *');
+                valueInput.attr('max', '100');
+                valueInput.attr('placeholder', 'Enter percentage (max 100)');
+            } else if (type === 'fixed_amount') {
+                suffix.text('$');
+                label.text('Discount Amount *');
+                valueInput.removeAttr('max');
+                valueInput.attr('placeholder', 'Enter amount');
+            }
+        }
+
+        // Initial update
+        updateValueLabel();
+
+        // Update on type change
+        $('#discountType').on('change', function() {
+            updateValueLabel();
+        });
+
+        // Capitalize coupon code
+        $('input[name="code"]').on('input', function() {
+            $(this).val($(this).val().toUpperCase());
+        });
+
+        // Validation for percentage discount (max 100)
+        $('#discountValue').on('change', function() {
+            const type = $('#discountType').val();
+            const value = parseFloat($(this).val());
+
+            if (type === 'percentage' && value > 100) {
+                alert('Percentage discount cannot exceed 100%.');
+                $(this).val('100');
+            }
+        });
+
+    });
+</script>

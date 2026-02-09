@@ -5,6 +5,8 @@
 
     <div class="card-body">
         <form class="validate_form" action="{{ route('banners.store') }}" method="POST" enctype="multipart/form-data">
+
+
             @csrf
 
             <div class="row">

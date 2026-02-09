@@ -27,13 +27,11 @@ class BannerRequest extends FormRequest
             'type' => [
                 'required',
                 'string',
-                Rule::in(array_keys(config('banner.types', []))),
             ],
 
             'group_key' => [
                 'required',
                 'string',
-                Rule::in(array_keys(config('banner.group_keys', []))),
             ],
 
             /* ---------- MEDIA ---------- */
@@ -42,7 +40,7 @@ class BannerRequest extends FormRequest
                 'image',
                 'mimes:jpeg,png,jpg,gif,webp',
                 'max:5120',
-                'dimensions:min_width=600,min_height=300,max_width=2000,max_height=1000',
+                // 'dimensions:min_width=600,min_height=300,max_width=2000,max_height=1000',
             ]),
 
             /* ---------- CONTENT ---------- */

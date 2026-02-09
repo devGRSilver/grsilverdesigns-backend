@@ -84,8 +84,8 @@ class BannerService
             // Add status dropdown if user has permission
             if ($canUpdateStatus) {
                 $statusHtml = status_dropdown($banner->status, [
-                    'id' => $banner->id,
-                    'url' => route('banners.status', $banner->id),
+                    'id' => encrypt($banner->id),
+                    'url' => route('banners.status', encrypt($banner->id)),
                     'method' => 'PUT',
                 ]);
             }
@@ -93,19 +93,17 @@ class BannerService
             // Actions
             $actionButtons = [];
             if ($canEdit) {
-                $actionButtons[] = btn_edit(route('banners.edit', $banner->id), true);
+                $actionButtons[] = btn_edit(route('banners.edit', encrypt($banner->id)), true);
             }
             if ($canView) {
-                $actionButtons[] = btn_view(route('banners.show', $banner->id), true);
+                $actionButtons[] = btn_view(route('banners.show', encrypt($banner->id)), true);
             }
             if ($canDelete) {
-                // Fixed: Changed from 'banners.show' to 'banners.delete'
-                $actionButtons[] = btn_delete(route('banners.delete', $banner->id), true);
+                $actionButtons[] = btn_delete(route('banners.delete', encrypt($banner->id)), true);
             }
 
-            // IMPORTANT: The keys here must match your DataTable columns configuration
             return [
-                'id' => $start + $index + 1, // Changed from 'id'
+                'id' => $start + $index + 1,
                 'image' => $imageHtml,
                 'title' => $titleHtml,
                 'type' => $banner->type,
@@ -134,53 +132,49 @@ class BannerService
     public function createBanner(array $data): Banner
     {
         return DB::transaction(function () use ($data) {
-            // Handle image upload
             if (isset($data['image_url']) && $data['image_url']) {
-                $data['image_url'] = $this->uploadImage($data['image_url']);
+                $data['image_url'] = imageUpload($data['image_url'], 'uploads/banners');
             }
-
             $data['created_by'] = Auth::id();
 
             return Banner::create($data);
         });
     }
 
-    /**
-     * Update banner
-     */
-    public function updateBanner(Banner $banner, array $data): Banner
+    public function updateBanner($id, array $data): Banner
     {
+        $banner = Banner::findOrFail($id); // always Model
+
         return DB::transaction(function () use ($banner, $data) {
-            // Handle image upload
-            if (isset($data['image_url']) && $data['image_url']) {
-                // Delete old image
-                if ($banner->image_url) {
-                    Storage::delete('public/' . $banner->image_url);
-                }
-                $data['image_url'] = $this->uploadImage($data['image_url']);
+
+            if (!empty($data['image_url'])) {
+                $data['image_url'] = imageUpload(
+                    $data['image_url'],
+                    'uploads/banners'
+                );
+            } else {
+                unset($data['image_url']); // prevent null overwrite
             }
 
-            $banner->update($data);
+            $banner->update($data); // ✅ Model update
 
-            return $banner;
+            return $banner->refresh();
         });
     }
+
 
     /**
      * Delete banner
      */
-    public function deleteBanner(Banner $banner): bool
-    {
-        return DB::transaction(function () use ($banner) {
-            // Delete image
-            if ($banner->image_url) {
-                Storage::delete('public/' . $banner->image_url);
-            }
 
-            return $banner->delete();
+    public function deleteBanner($id): bool
+    {
+        $banner = Banner::findOrFail($id); // always Model
+
+        return DB::transaction(function () use ($banner) {
+            return (bool) $banner->delete();
         });
     }
-
     /**
      * Update status
      */
@@ -189,13 +183,7 @@ class BannerService
         return $banner->update(['status' => $status]);
     }
 
-    /**
-     * Upload image
-     */
-    private function uploadImage($image): string
-    {
-        return $image->store($this->uploadPath, 'public');
-    }
+
 
     /**
      * Get banner statistics

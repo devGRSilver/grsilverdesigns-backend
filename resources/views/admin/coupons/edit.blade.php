@@ -207,11 +207,7 @@
 <script>
     $(document).ready(function() {
 
-        // Select2 for normal selects
-        $('.select2').select2({
-            width: '100%',
-            dropdownParent: $('#couponForm').closest('.modal, .card-body'),
-        });
+
 
         // Date Range Picker with existing dates
         flatpickr("#dateRange", {

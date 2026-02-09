@@ -57,8 +57,7 @@ class BannerController extends ResponseController
     public function store(BannerRequest $request)
     {
         try {
-            $banner = $this->bannerService->createRecord($request->validated());
-
+            $banner = $this->bannerService->createBanner($request->validated());
             return $this->successResponse(
                 ['id' => encrypt($banner->id)],
                 "{$this->resourceName} created successfully.",
@@ -77,10 +76,11 @@ class BannerController extends ResponseController
     /**
      * Show the form for editing the specified banner.
      */
-    public function edit(Banner $banner)
+    public function edit($id)
     {
         $types = config('banner.types', []);
         $groupKeys = config('banner.group_keys', []);
+        $banner =  Banner::find(decrypt($id));
 
         return view("admin.{$this->resource}.edit", [
             'title'     => "Edit {$this->resourceName}",
@@ -93,19 +93,20 @@ class BannerController extends ResponseController
     /**
      * Update the specified banner.
      */
-    public function update(BannerRequest $request, Banner $banner)
+    /**
+     * Update the specified banner.
+     */
+    public function update(BannerRequest $request, $id)
     {
         try {
-            $this->bannerService->updateRecord($banner, $request->validated());
+            $this->bannerService->updateBanner(decrypt($id), $request->validated());
 
             return $this->successResponse(
                 [],
-                "{$this->resourceName} updated successfully.",
-                route('banners.index')
+                "{$this->resourceName} updated successfully."
             );
         } catch (\Exception $e) {
             Log::error('Banner update failed: ' . $e->getMessage());
-
             return $this->errorResponse(
                 'Failed to update banner. Please try again.',
                 500
@@ -113,11 +114,14 @@ class BannerController extends ResponseController
         }
     }
 
+
     /**
      * Display the specified banner.
      */
-    public function show(Banner $banner)
+    public function show($id)
     {
+        $banner =  Banner::find(decrypt($id));
+
         return view("admin.{$this->resource}.show", [
             'title'  => "{$this->resourceName} Details",
             'banner' => $banner,
@@ -127,10 +131,10 @@ class BannerController extends ResponseController
     /**
      * Remove the specified banner.
      */
-    public function destroy(Banner $banner)
+    public function destroy($id)
     {
         try {
-            $this->bannerService->deleteRecord($banner);
+            $this->bannerService->deleteBanner(decrypt($id));
 
             return $this->successResponse(
                 [],

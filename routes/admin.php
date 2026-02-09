@@ -699,28 +699,29 @@ Route::prefix('admin')->middleware('auth:admin')->group(function () {
             ->name('store')
             ->middleware('permission:banners.create');
 
-        Route::get('{banner}/edit', [BannerController::class, 'edit'])
+        Route::get('{id}/edit', [BannerController::class, 'edit'])
             ->name('edit')
             ->middleware('permission:banners.update');
 
-        Route::put('{banner}', [BannerController::class, 'update'])
+        Route::put('{id}', [BannerController::class, 'update'])
             ->name('update')
             ->middleware('permission:banners.update');
 
-        Route::patch('{banner}/status', [BannerController::class, 'updateStatus'])
+
+        Route::PUT('{id}/status', [BannerController::class, 'updateStatus'])
             ->name('status.update')
             ->middleware('permission:banners.update.status');
 
-        Route::delete('{banner}', [BannerController::class, 'destroy'])
+        Route::delete('{id}', [BannerController::class, 'destroy'])
             ->name('delete')
             ->middleware('permission:banners.delete');
 
-        Route::get('{banner}', [BannerController::class, 'show'])
+        Route::get('{id}', [BannerController::class, 'show'])
             ->name('show')
             ->middleware('permission:banners.view');
 
 
-        Route::patch('{banner}/status', [BannerController::class, 'status'])
+        Route::patch('{id}/status', [BannerController::class, 'status'])
             ->name('status')
             ->middleware('permission:banners.view');
     });
