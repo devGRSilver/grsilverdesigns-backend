@@ -97,7 +97,7 @@
                                             <div class="flex-grow-1 ms-3">
                                                 <p class="text-muted mb-0" style="font-size: 12px;">Phone</p>
                                                 <p class="mb-0 fw-semibold">
-                                                    {{ $data->phone_code && $data->phone ? $data->phone_code . ' ' . $data->phone : 'N/A' }}
+                                                    {{ $data->phonecode && $data->phone ? $data->phonecode . ' ' . $data->phone : 'N/A' }}
                                                 </p>
                                             </div>
                                         </div>
@@ -435,9 +435,9 @@
                                         value="{{ $data->email }}" required>
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label for="phone_code" class="form-label">Phone Code</label>
-                                    <input type="text" class="form-control" id="phone_code" name="phone_code"
-                                        value="{{ $data->phone_code }}" placeholder="+1">
+                                    <label for="phonecode" class="form-label">Phone Code</label>
+                                    <input type="text" class="form-control" id="phonecode" name="phonecode"
+                                        value="{{ $data->phonecode }}" placeholder="+1">
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label for="phone" class="form-label">Phone Number</label>

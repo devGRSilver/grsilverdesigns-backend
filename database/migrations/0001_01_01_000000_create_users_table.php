@@ -16,15 +16,15 @@ return new class extends Migration
 
             $table->string('name');
 
-            $table->string('phone')->nullable();
-            $table->string('phone_code', 5)->comment('phone_country_code')->nullable();
+            $table->string('phone')->nullable()->unique();
+            $table->string('phonecode', 5)->comment('phone_country_code')->nullable();
             $table->timestamp('phone_verified_at')->nullable();
 
-            $table->string('email')->unique();
+            $table->string('email')->nullable()->unique();
             $table->timestamp('email_verified_at')->nullable();
 
-            $table->string('password');
-            $table->rememberToken();
+            $table->string('password')->nullable();
+            $table->rememberToken()->nullable();
 
             $table->string('profile_picture')->nullable();
 
@@ -34,11 +34,12 @@ return new class extends Migration
             $table->enum('device_type', ['ios', 'android', 'web', 'other'])->nullable();
             $table->text('device_token')->nullable();
 
-            $table->string('ip_address', 45)->nullable(); // ✅ FIXED
+            $table->string('ip_address', 45)->nullable();
             $table->string('user_agent')->nullable();
 
             $table->boolean('status')->default(true);
             $table->timestamp('last_login_at')->nullable();
+            $table->enum('profile_status', ['incomplete', 'complete'])->default('incomplete');
 
             $table->timestamps();
             $table->softDeletes();

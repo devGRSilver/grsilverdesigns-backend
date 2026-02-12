@@ -168,7 +168,7 @@
                                                                                 <td>Phone</td>
                                                                                 <td>
                                                                                     <div class="text-heading">
-                                                                                        {{ $data->phone_code }}
+                                                                                        {{ $data->phonecode }}
                                                                                         {{ $data->phone }}
                                                                                     </div>
                                                                                 </td>

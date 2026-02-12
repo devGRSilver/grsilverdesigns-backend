@@ -25,7 +25,7 @@ class UserService
      **********************************************/
     public function getUsersForDataTable($request): array
     {
-        $columns = ['id', 'name', 'phone_code', 'phone', 'email', 'created_at'];
+        $columns = ['id', 'name', 'phonecode', 'phone', 'email', 'created_at'];
 
         /** BASE QUERY */
         $baseQuery = User::withCount('orders')
@@ -50,7 +50,7 @@ class UserService
                     $dbSearch = ltrim($cleanPhoneSearch, '+');
 
                     $q->orWhereRaw(
-                        "CONCAT(phone_code, phone) LIKE ?",
+                        "CONCAT(phonecode, phone) LIKE ?",
                         ["%{$dbSearch}%"]
                     );
 
@@ -109,7 +109,7 @@ class UserService
         $orderDir = $request->input('order.0.dir', 'desc');
 
         if ($orderCol === 'phone') {
-            $filteredQuery->orderByRaw("CONCAT(phone_code, phone) {$orderDir}");
+            $filteredQuery->orderByRaw("CONCAT(phonecode, phone) {$orderDir}");
         } else {
             $filteredQuery->orderBy($orderCol, $orderDir);
         }
@@ -159,7 +159,7 @@ class UserService
             return [
                 'id'          => $start + $index + 1,
                 'name'        => ucfirst($user->name),
-                'phone'       => $this->formatPhoneNumber($user->phone_code, $user->phone),
+                'phone'       => $this->formatPhoneNumber($user->phonecode, $user->phone),
                 'email'       => $user->email,
                 'total_order' => $user->orders_count ?? 0,
                 'status'      => $statusHtml,

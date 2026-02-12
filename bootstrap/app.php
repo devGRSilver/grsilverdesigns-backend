@@ -9,14 +9,14 @@ use Illuminate\Validation\ValidationException;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\Encryption\DecryptException;
-use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Http\Exceptions\ThrottleRequestsException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Session\TokenMismatchException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Routing\Exception\RouteNotFoundException;
 use Illuminate\Support\Facades\Log;
-
-
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -26,73 +26,113 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-
         $middleware->alias([
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
         ]);
 
-        $middleware->redirectGuestsTo('/admin/login');
+        $middleware->redirectGuestsTo(function (Request $request) {
+            if ($request->is('api/*') || $request->expectsJson()) {
+                return null;
+            }
+            return '/admin/login';
+        });
     })
     ->withExceptions(function (Exceptions $exceptions): void {
 
-        // Log all exceptions
         $exceptions->reportable(function (Throwable $e) {
             Log::error($e->getMessage(), [
-                'exception' => $e,
+                'exception' => get_class($e),
+                'message' => $e->getMessage(),
                 'file' => $e->getFile(),
-                'line' => $e->getLine()
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
             ]);
         });
 
-        // 401 - Unauthenticated
         $exceptions->renderable(function (AuthenticationException $e, Request $request) {
-            if ($request->expectsJson()) {
+            if ($request->expectsJson() || $request->is('api/*')) {
                 return response()->json([
                     'status'  => false,
                     'message' => $e->getMessage(),
                     'error'   => 'Authentication required'
                 ], 401);
             }
+            return redirect()->to('/admin/login');
         });
 
-        // 403 - Unauthorized
         $exceptions->renderable(function (AuthorizationException $e, Request $request) {
-            if ($request->expectsJson()) {
+            if ($request->expectsJson() || $request->is('api/*')) {
                 return response()->json([
                     'status'  => false,
-                    'message' => $e->getMessage(),
+                    'message' => $e->getMessage() ?: 'This action is unauthorized',
                     'error'   => 'Insufficient permissions'
                 ], 403);
             }
+            abort(403, $e->getMessage() ?: 'This action is unauthorized');
         });
 
-        // 404 - Not Found
+        $exceptions->renderable(function (ModelNotFoundException $e, Request $request) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'status'  => false,
+                    'message' => $e->getMessage(),
+                    'error'   => 'Model not found'
+                ], 404);
+            }
+            abort(404, 'Resource not found');
+        });
+
         $exceptions->renderable(function (NotFoundHttpException $e, Request $request) {
-            if ($request->expectsJson()) {
+            if ($request->expectsJson() || $request->is('api/*')) {
                 return response()->json([
                     'status'  => false,
                     'message' => $e->getMessage(),
                     'error'   => 'Resource not found'
                 ], 404);
             }
+            abort(404, 'Page not found');
         });
 
-        // 405 - Method Not Allowed
+        $exceptions->renderable(function (RouteNotFoundException $e, Request $request) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'status'  => false,
+                    'message' => $e->getMessage(),
+                    'error'   => 'Route not found'
+                ], 404);
+            }
+            abort(404, 'Route not found');
+        });
+
         $exceptions->renderable(function (MethodNotAllowedHttpException $e, Request $request) {
-            if ($request->expectsJson()) {
+            if ($request->expectsJson() || $request->is('api/*')) {
                 return response()->json([
                     'status'  => false,
                     'message' => $e->getMessage(),
                     'error'   => 'Method not allowed'
                 ], 405);
             }
+            abort(405, 'Method not allowed');
         });
 
-        // 422 - Validation error
+        $exceptions->renderable(function (TokenMismatchException $e, Request $request) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'status'  => false,
+                    'message' => $e->getMessage(),
+                    'error'   => 'Token expired'
+                ], 419);
+            }
+            return redirect()
+                ->back()
+                ->withInput($request->except('_token'))
+                ->with('error', 'Your session has expired. Please try again.');
+        });
+
         $exceptions->renderable(function (ValidationException $e, Request $request) {
-            if ($request->expectsJson()) {
+            if ($request->expectsJson() || $request->is('api/*')) {
                 return response()->json([
                     'status'  => false,
                     'message' => $e->getMessage(),
@@ -101,59 +141,92 @@ return Application::configure(basePath: dirname(__DIR__))
             }
         });
 
-        // 400 - Database Query Exception
-        $exceptions->renderable(function (QueryException $e, Request $request) {
-            if ($request->expectsJson()) {
-                return response()->json([
-                    'status'  => false,
-                    'message' => app()->environment('production')
-                        ? 'Database error occurred.'
-                        : $e->getMessage(),
-                    'error'   => 'Bad Request'
-                ], 400);
-            }
-        });
+        $exceptions->renderable(function (ThrottleRequestsException $e, Request $request) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                $retryAfter = $e->getHeaders()['Retry-After'] ?? 0;
 
-        // 404 - Route Not Found (Sanctum often triggers this)
-        $exceptions->renderable(function (RouteNotFoundException $e, Request $request) {
-            if ($request->expectsJson()) {
+                $time = $retryAfter < 60
+                    ? "{$retryAfter} seconds"
+                    : ceil($retryAfter / 60) . " minute" . (ceil($retryAfter / 60) > 1 ? 's' : '');
+
                 return response()->json([
                     'status'  => false,
                     'message' => $e->getMessage(),
-                    'error'   => 'Route not found'
-                ], 404);
+                    'retry_after_seconds' => (int)$retryAfter
+                ], 429)->header('Retry-After', $retryAfter);
             }
+
+            return redirect()->back()->with('error', 'Too many requests. Please slow down.');
         });
 
-
         $exceptions->renderable(function (DecryptException $e, Request $request) {
-            if ($request->expectsJson()) {
+            if ($request->expectsJson() || $request->is('api/*')) {
                 return response()->json([
                     'status' => false,
-                    'message' => "Decryption Error . " . $e->getMessage()
+                    'message' => $e->getMessage(),
+                    'error' => 'Decryption failed'
                 ], 400);
             }
 
-            return redirect()
-                ->back()
-                ->with('error', 'Invalid or expired link.');
+            return redirect()->back()->with('error', 'Invalid or expired link.');
         });
-        $exceptions->renderable(function (ThrottleRequestsException $e, Request $request) {
-            if ($request->expectsJson()) {
 
-                // Get retry time from the exception headers (correct value)
-                $retryAfter = $e->getHeaders()['Retry-After'] ?? 0;
-
-                // Format time
-                $time = $retryAfter < 60
-                    ? "{$retryAfter} seconds"
-                    : ceil($retryAfter / 60) . " minutes";
-
+        $exceptions->renderable(function (QueryException $e, Request $request) {
+            if ($request->expectsJson() || $request->is('api/*')) {
                 return response()->json([
                     'status'  => false,
-                    'message' => "Too many attempts. Please try again after {$time}.",
-                    'retry_after_seconds' => $retryAfter
-                ], 429);
+                    'message' => app()->environment('production')
+                        ? 'A database error occurred. Please try again later.'
+                        : $e->getMessage(),
+                    'error'   => 'Database error'
+                ], 500);
+            }
+
+            if (app()->environment('production')) {
+                abort(500, 'Database error occurred');
+            }
+        });
+
+        $exceptions->renderable(function (HttpException $e, Request $request) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'status'  => false,
+                    'message' => $e->getMessage(),
+                    'error'   => 'HTTP Exception'
+                ], $e->getStatusCode());
+            }
+        });
+
+        $exceptions->renderable(function (Throwable $e, Request $request) {
+            if (
+                $e instanceof AuthenticationException ||
+                $e instanceof AuthorizationException ||
+                $e instanceof ModelNotFoundException ||
+                $e instanceof NotFoundHttpException ||
+                $e instanceof RouteNotFoundException ||
+                $e instanceof MethodNotAllowedHttpException ||
+                $e instanceof TokenMismatchException ||
+                $e instanceof ValidationException ||
+                $e instanceof ThrottleRequestsException ||
+                $e instanceof DecryptException ||
+                $e instanceof QueryException ||
+                $e instanceof HttpException
+            ) {
+                return null;
+            }
+
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'status'  => false,
+                    'message' => app()->environment('production')
+                        ? 'An unexpected error occurred. Please try again later.'
+                        : $e->getMessage(),
+                    'error'   => 'Internal server error'
+                ], 500);
+            }
+
+            if (app()->environment('production')) {
+                abort(500, 'Something went wrong');
             }
         });
     })->create();

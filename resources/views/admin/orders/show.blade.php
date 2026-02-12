@@ -317,7 +317,7 @@
                                     @if ($order->user->phone)
                                         <p class="mb-0">
                                             <i class="bi bi-telephone me-2 text-muted"></i>
-                                            {{ $order->user->phone_code }} {{ $order->user->phone }}
+                                            {{ $order->user->phonecode }} {{ $order->user->phone }}
                                         </p>
                                     @endif
                                 </div>

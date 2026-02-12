@@ -45,7 +45,7 @@ class StaffService
                     ->orWhere('email', 'like', "%{$search}%")
                     ->orWhere('phone', 'like', "%{$search}%")
                     ->orWhereRaw(
-                        "CONCAT(COALESCE(phone_code,''), COALESCE(phone,'')) LIKE ?",
+                        "CONCAT(COALESCE(phonecode,''), COALESCE(phone,'')) LIKE ?",
                         ["%{$search}%"]
                     );
             });
@@ -87,7 +87,7 @@ class StaffService
             return [
                 'id'         => $request->start + $index + 1,
                 'name'       => ucfirst($user->name),
-                'phone'      => trim("{$user->phone_code} {$user->phone}"),
+                'phone'      => trim("{$user->phonecode} {$user->phone}"),
                 'email'      => $user->email,
 
                 'role' => $role
