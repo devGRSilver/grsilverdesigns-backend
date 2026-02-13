@@ -14,5 +14,17 @@ class Constant
     const OUT_OF_STOCK = 'out_of_stock';
     const IN_STOCK = 'in_stock';
 
-    const DEFAULT_CURRENCY = "$";
+    const DEFAULT_CURRENCY = "USD";
+
+
+
+
+
+    // OTP AUTH SYSTEM 
+    const OTP_PREFIX = 'otp:';
+    const BLOCKED_PREFIX = 'blocked:phone:';
+    const MAX_OTP_ATTEMPTS = 3;
+    const OTP_TTL = 300; // 5 minutes
+    const BLOCK_DURATION = 3600; // 1 hour
+    const OTP_LENGTH = 6;
 }

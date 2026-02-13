@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
@@ -16,23 +17,32 @@ class User extends Authenticatable
 
     protected $fillable = [
         'name',
-        'phone',
         'phonecode',
-        'profile_status',
-        'phone_verified_at',
+        'phone',
         'email',
-        'email_verified_at',
         'password',
+        'phone_verified_at',
+        'email_verified_at',
+
         'profile_picture',
-        'timezone',
-        'currency',
+        'status',
+        'profile_complete',
+
+        'last_login_at',
         'device_type',
         'device_token',
-        'ip_address',
         'user_agent',
-        'status',
-        'last_login_at',
+        'ip_address',
+
+        'country',
+        'country_name',
+        'city',
+        'timezone',
+        'currency',
+        'latitude',
+        'longitude',
     ];
+
 
     protected $hidden = [
         'password',
@@ -42,6 +52,9 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
+            'profile_complete' => 'boolean',
+            'latitude' => 'decimal:7',
+            'longitude' => 'decimal:7',
             'email_verified_at' => 'datetime',
             'phone_verified_at' => 'datetime',
             'password' => 'hashed',

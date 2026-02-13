@@ -17,7 +17,7 @@ class OtpRequest extends FormRequest
             'phonecode' => [
                 'required',
                 'string',
-                'regex:/^\+[1-9]\d{0,3}$/', // + followed by 1–4 digits, cannot start with 0
+                'regex:/^[1-9]\d{0,3}$/', // 1–4 digits, cannot start with 0
             ],
             'phone' => [
                 'required',
@@ -31,7 +31,7 @@ class OtpRequest extends FormRequest
     {
         return [
             'phonecode.required' => 'Phone code is required.',
-            'phonecode.regex' => 'Invalid phone code format. Example: +91',
+            'phonecode.regex' => 'Invalid phone code format. Example: 91',
             'phone.required' => 'Phone number is required.',
             'phone.regex' => 'Invalid phone number. It must contain 6–15 digits only.',
         ];
@@ -39,20 +39,16 @@ class OtpRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
-        // Normalize phone
+        // Normalize phone - remove all non-digit characters
         if ($this->filled('phone')) {
             $this->merge([
                 'phone' => preg_replace('/\D/', '', trim($this->phone)),
             ]);
         }
 
-        // Normalize phonecode
+        // Normalize phonecode - remove + and any non-digit characters
         if ($this->filled('phonecode')) {
-            $phonecode = trim($this->phonecode);
-
-            if (!str($phonecode)->startsWith('+')) {
-                $phonecode = '+' . ltrim($phonecode, '+');
-            }
+            $phonecode = preg_replace('/\D/', '', trim($this->phonecode));
 
             $this->merge([
                 'phonecode' => $phonecode,

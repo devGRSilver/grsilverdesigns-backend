@@ -31,10 +31,6 @@ return new class extends Migration
             $table->string('ip_address', 45)->nullable();
 
             // Device Info
-            $table->string('timezone', 50)->default('UTC');
-            $table->string('device_type', 20)->nullable();
-            $table->text('device_token')->nullable();
-
             $table->timestamps();
 
             /*

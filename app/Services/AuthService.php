@@ -6,46 +6,36 @@ use App\Constants\Constant;
 use App\Models\User;
 use App\Models\Otp;
 use App\Jobs\SendOtpJob;
-use Carbon\Carbon;
-use Illuminate\Support\Facades\{DB, Redis, Log, Hash};
+use Illuminate\Support\Facades\{DB, Cache, Log, Hash};
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class AuthService
 {
-    private const OTP_PREFIX = 'otp:';
-    private const COOLDOWN_PREFIX = 'ratelimit:otp:';
-    private const BLOCKED_PREFIX = 'blocked:phone:';
 
-    private const MAX_OTP_ATTEMPTS = 5;
-    private const DEFAULT_OTP_TTL = 300;
-    private const DEFAULT_COOLDOWN = 60;
-    private const DEFAULT_BLOCK_DURATION = 3600;
 
-    /**
-     * Send OTP to phone number
-     */
     public function sendOtp(array $data): array
     {
         $phone = $this->formatPhone($data['phonecode'], $data['phone']);
 
-
+        // Check if phone is blocked
         $this->checkIfBlocked($phone);
-        $this->checkCooldown($phone);
 
+        // Generate OTP and token
         $otp = $this->generateOtp();
         $token = (string) Str::uuid();
 
+        // Store OTP
         $this->storeOtp($token, $data, $otp);
-        $this->setCooldown($phone);
 
-        dispatch(new SendOtpJob($phone, $otp, $data['type'] ?? 'login'));
+        // Send OTP asynchronously
+        dispatch(new SendOtpJob($phone, $otp, $data['type'] ?? 'login'))->onQueue('high');
 
-        Log::info('OTP sent', ['phone' => $phone, 'token' => $token]);
+        Log::info('OTP sent', ['phone' => $this->maskPhone($phone)]);
 
         return [
             'token' => $token,
-            'expires_in' => config('otp.ttl', self::DEFAULT_OTP_TTL)
+            'expires_in' => Constant::OTP_TTL
         ];
     }
 
@@ -54,14 +44,12 @@ class AuthService
      */
     public function verifyOtp(array $data, string $ip, ?string $userAgent): array
     {
-        $otpData = $this->validateOtp($data);
-
-
+        $otpData = $this->validateOtp($data, $ip);
         $phone = $this->formatPhone($otpData['phonecode'], $otpData['phone']);
 
         return DB::transaction(function () use ($otpData, $phone, $ip, $userAgent) {
-            $user = User::where('phonecode', $otpData['phonecode'])
-                ->where('phone', $otpData['phone'])
+            $user = User::where('phone', $otpData['phone'])
+                ->lockForUpdate()
                 ->first();
 
             $isNewUser = !$user;
@@ -69,24 +57,23 @@ class AuthService
             if ($isNewUser) {
                 $user = $this->createUser($otpData);
             } else {
+                $this->checkUserStatus($user);
                 $this->verifyUserPhone($user);
             }
 
             $this->updateUserLoginData($user, $otpData, $ip, $userAgent);
             $this->clearBlock($phone);
 
-            $token = $user->createToken(
-                'auth_token',
-                ['*'],
-                now()->addMinutes(config('sanctum.expiration', 525600))
-            );
+            // Create access token
+            $token = $user->createToken('auth_token')->plainTextToken;
 
-            Log::info('User authenticated', ['user_id' => $user->id, 'new' => $isNewUser]);
+
+            Log::info('User authenticated', ['user_id' => $user->id, 'is_new' => $isNewUser]);
 
             return [
                 'message' => $isNewUser ? 'Registration successful' : 'Login successful',
                 'user' => $user->only(['id', 'name', 'phone', 'phonecode', 'timezone', 'status']),
-                'access_token' => $token->plainTextToken,
+                'access_token' => $token,
                 'is_new_user' => $isNewUser
             ];
         });
@@ -97,8 +84,8 @@ class AuthService
      */
     public function resendOtp(string $token): array
     {
-        $key = self::OTP_PREFIX . $token;
-        $data = Redis::hgetall($key);
+        $key = Constant::OTP_PREFIX . $token;
+        $data = Cache::get($key);
 
         if (!$data) {
             throw ValidationException::withMessages([
@@ -106,7 +93,14 @@ class AuthService
             ]);
         }
 
-        Redis::del($key);
+        $resendCount = (int) ($data['resend_count'] ?? 0);
+        if ($resendCount >= 3) {
+            throw ValidationException::withMessages([
+                'token' => ['Maximum resend attempts exceeded.']
+            ]);
+        }
+
+        Cache::forget($key);
         Otp::where('token', $token)->delete();
 
         return $this->sendOtp([
@@ -115,8 +109,7 @@ class AuthService
             'type' => $data['type'] ?? 'login',
             'name' => $data['name'] ?? null,
             'timezone' => $data['timezone'] ?? 'UTC',
-            'device_type' => $data['device_type'] ?? null,
-            'device_token' => $data['device_token'] ?? null
+            'resend_count' => $resendCount + 1
         ]);
     }
 
@@ -137,10 +130,10 @@ class AuthService
     /**
      * Validate OTP
      */
-    private function validateOtp(array $requestData): array
+    private function validateOtp(array $requestData, string $ip): array
     {
-        $key = self::OTP_PREFIX . $requestData['token'];
-        $data = Redis::hgetall($key);
+        $key = Constant::OTP_PREFIX . $requestData['token'];
+        $data = Cache::get($key);
 
         if (!$data) {
             throw ValidationException::withMessages([
@@ -150,74 +143,82 @@ class AuthService
 
         $attempts = (int) ($data['attempts'] ?? 0);
 
-        if ($attempts >= self::MAX_OTP_ATTEMPTS) {
-            Redis::del($key);
+        // Check max attempts
+        if ($attempts >= Constant::MAX_OTP_ATTEMPTS) {
+            Cache::forget($key);
             $this->blockPhone($this->formatPhone($data['phonecode'], $data['phone']));
 
             throw ValidationException::withMessages([
-                'otp' => ['Maximum attempts exceeded. Phone temporarily blocked.']
+                'otp' => ['Maximum attempts exceeded. Phone blocked for 1 hour.']
             ]);
         }
 
+        // Verify OTP
         if (!Hash::check($requestData['otp'], $data['otp'])) {
-            $remaining = self::MAX_OTP_ATTEMPTS - Redis::hincrby($key, 'attempts', 1);
+            $data['attempts'] = $attempts + 1;
+            Cache::put($key, $data, Constant::OTP_TTL);
 
+            $remaining = Constant::MAX_OTP_ATTEMPTS - $data['attempts'];
             throw ValidationException::withMessages([
-                'otp' => ["Invalid OTP. {$remaining} attempts remaining."]
+                'otp' => ["Invalid OTP. {$remaining} attempt(s) remaining."]
             ]);
         }
 
-        Redis::del($key);
+        // Success - clear cache
+        Cache::forget($key);
 
-        Otp::where('token', $requestData['token'])
-            ->update([
-                'is_verified' => true,
-                'verified_at' => now(),
-                'attempts' => DB::raw('attempts + 1')
-            ]);
+        // Update database
+        Otp::where('token', $requestData['token'])->update([
+            'is_verified' => true,
+            'verified_at' => now(),
+            'attempts' => $attempts + 1
+        ]);
 
         return array_merge($data, [
             'device_type' => $requestData['device_type'] ?? null,
             'device_token' => $requestData['device_token'] ?? null,
-            'timezone' => $requestData['timezone'] ?? null
+            'timezone' => $requestData['timezone'] ?? $data['timezone'] ?? 'UTC'
         ]);
     }
 
     /**
-     * Store OTP in Redis and Database
+     * Store OTP in cache and database
      */
     private function storeOtp(string $token, array $data, string $otp): void
     {
-        $key = self::OTP_PREFIX . $token;
-        $ttl = config('otp.ttl', self::DEFAULT_OTP_TTL);
         $hashedOtp = Hash::make($otp);
+        $expiresAt = now()->addSeconds(Constant::OTP_TTL);
 
-        DB::transaction(function () use ($key, $data, $hashedOtp, $ttl, $token) {
-            Redis::hMSet($key, [
+        // Store in cache
+        Cache::put(
+            Constant::OTP_PREFIX . $token,
+            [
                 'phonecode' => $data['phonecode'],
                 'phone' => $data['phone'],
                 'full_phone' => $data['phonecode'] . $data['phone'],
                 'otp' => $hashedOtp,
                 'type' => $data['type'] ?? 'login',
                 'name' => $data['name'] ?? '',
+                'timezone' => $data['timezone'] ?? 'UTC',
                 'attempts' => 0,
+                'resend_count' => $data['resend_count'] ?? 0,
                 'created_at' => now()->toDateTimeString(),
-            ]);
+            ],
+            Constant::OTP_TTL
+        );
 
-            Redis::expire($key, $ttl);
-
-            Otp::create([
-                'phonecode' => $data['phonecode'],
-                'phone' => $data['phone'],
-                'otp' => $hashedOtp,
-                'type' => $data['type'] ?? 'login',
-                'expires_at' => now()->addSeconds($ttl),
-                'token' => $token,
-                'full_phone' => $data['phonecode'] . $data['phone'],
-                'is_verified' => false,
-                'attempts' => 0
-            ]);
-        });
+        // Store in database
+        Otp::create([
+            'phonecode' => $data['phonecode'],
+            'phone' => $data['phone'],
+            'otp' => $hashedOtp,
+            'type' => $data['type'] ?? 'login',
+            'expires_at' => $expiresAt,
+            'token' => $token,
+            'full_phone' => $data['phonecode'] . $data['phone'],
+            'is_verified' => false,
+            'attempts' => 0
+        ]);
     }
 
     /**
@@ -226,23 +227,21 @@ class AuthService
     private function createUser(array $data): User
     {
         return User::create([
-            'name' => $data['name'] ?? 'User',
+            'name' => 'GR User',
             'phonecode' => $data['phonecode'],
             'phone' => $data['phone'],
             'phone_verified_at' => now(),
             'status' => Constant::ACTIVE,
-            'timezone' => $data['timezone'] ?? 'UTC'
         ]);
     }
 
     /**
-     * Verify user phone if not verified
+     * Verify user phone
      */
     private function verifyUserPhone(User $user): void
     {
         if (!$user->phone_verified_at) {
-            $user->phone_verified_at = now();
-            $user->save();
+            $user->update(['phone_verified_at' => now()]);
         }
     }
 
@@ -253,7 +252,6 @@ class AuthService
     {
         $user->update([
             'last_login_at' => now(),
-            'ip_address' => $ip,
             'timezone' => $data['timezone'] ?? $user->timezone ?? 'UTC',
             'device_type' => $data['device_type'] ?? null,
             'device_token' => $data['device_token'] ?? null,
@@ -262,51 +260,16 @@ class AuthService
     }
 
     /**
-     * Format phone number
-     */
-    private function formatPhone(string $code, string $number): string
-    {
-        return $code . $number;
-    }
-
-    /**
-     * Check if phone is in cooldown
-     */
-    private function checkCooldown(string $phone): void
-    {
-        $key = self::COOLDOWN_PREFIX . $phone;
-        $ttl = Redis::ttl($key);
-
-        if ($ttl > 0) {
-            throw ValidationException::withMessages([
-                'phone' => ["Please wait {$ttl} seconds before requesting another OTP."]
-            ]);
-        }
-    }
-
-    /**
-     * Set cooldown period
-     */
-    private function setCooldown(string $phone): void
-    {
-        Redis::setex(
-            self::COOLDOWN_PREFIX . $phone,
-            config('otp.cooldown', self::DEFAULT_COOLDOWN),
-            1
-        );
-    }
-
-    /**
      * Check if phone is blocked
      */
     private function checkIfBlocked(string $phone): void
     {
-        $key = self::BLOCKED_PREFIX . $phone;
-        $ttl = Redis::ttl($key);
+        $key = Constant::BLOCKED_PREFIX . $phone;
 
-        if ($ttl > 0) {
+        if (Cache::has($key)) {
+            $ttl = Cache::get($key . ':ttl', 60);
             throw ValidationException::withMessages([
-                'phone' => ['Phone is blocked. Try again in ' . ceil($ttl / 60) . ' minutes.']
+                'phone' => ['Phone blocked. Try again in ' . ceil($ttl / 60) . ' minute(s).']
             ]);
         }
     }
@@ -316,13 +279,12 @@ class AuthService
      */
     private function blockPhone(string $phone): void
     {
-        Redis::setex(
-            self::BLOCKED_PREFIX . $phone,
-            config('otp.block_duration', self::DEFAULT_BLOCK_DURATION),
-            1
-        );
+        $key = Constant::BLOCKED_PREFIX . $phone;
 
-        Log::warning('Phone blocked', ['phone' => $phone]);
+        Cache::put($key, true, Constant::BLOCK_DURATION);
+        Cache::put($key . ':ttl', Constant::BLOCK_DURATION, Constant::BLOCK_DURATION);
+
+        Log::warning('Phone blocked', ['phone' => $this->maskPhone($phone)]);
     }
 
     /**
@@ -330,8 +292,43 @@ class AuthService
      */
     private function clearBlock(string $phone): void
     {
-        Redis::del(self::BLOCKED_PREFIX . $phone);
+        Cache::forget(Constant::BLOCKED_PREFIX . $phone);
     }
+
+    /**
+     * Check user status
+     */
+    private function checkUserStatus(User $user): void
+    {
+        if (in_array($user->status, [Constant::IN_ACTIVE])) {
+            throw ValidationException::withMessages([
+                'phone' => ['Account suspended. Contact support.']
+            ]);
+        }
+    }
+
+    /**
+     * Format phone number (numeric only, no +)
+     */
+    private function formatPhone(string $code, string $number): string
+    {
+        // Remove all non-digits
+        $code   = preg_replace('/\D/', '', $code);
+        $number = preg_replace('/\D/', '', $number);
+
+        // Remove leading zero from number
+        $number = ltrim($number, '0');
+
+        $phone = $code . $number;
+
+        // Validate length (E.164 max 15 digits)
+        if (!preg_match('/^\d{8,15}$/', $phone)) {
+            throw new \InvalidArgumentException('Invalid phone number format.');
+        }
+
+        return $phone;
+    }
+
 
     /**
      * Generate OTP
@@ -342,13 +339,24 @@ class AuthService
             return config('otp.test_otp', '123456');
         }
 
-        $length = config('otp.length', 6);
-
+        $max = (int) str_repeat('9', Constant::OTP_LENGTH);
         return str_pad(
-            (string) random_int(0, (int) str_repeat('9', $length)),
-            $length,
+            (string) random_int(0, $max),
+            Constant::OTP_LENGTH,
             '0',
             STR_PAD_LEFT
         );
+    }
+
+    /**
+     * Mask phone number for logging
+     */
+    private function maskPhone(string $phone): string
+    {
+        if (strlen($phone) <= 4) {
+            return str_repeat('*', strlen($phone));
+        }
+
+        return substr($phone, 0, 3) . str_repeat('*', strlen($phone) - 6) . substr($phone, -3);
     }
 }

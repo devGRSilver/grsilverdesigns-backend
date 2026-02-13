@@ -34,7 +34,7 @@ class VerifyOtpRequest extends FormRequest
             'device_type' => [
                 'nullable',
                 'string',
-                Rule::in(['ios', 'android', 'web', 'other']),
+                Rule::in([1, 2, 3, 4]),
             ],
 
             'device_token' => [

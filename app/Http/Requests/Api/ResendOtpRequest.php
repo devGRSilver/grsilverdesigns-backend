@@ -17,7 +17,6 @@ class ResendOtpRequest extends FormRequest
             'token' => [
                 'required',
                 'string',
-                'size:64',
             ],
         ];
     }
