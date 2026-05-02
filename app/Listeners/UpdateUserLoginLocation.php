@@ -16,7 +16,6 @@ class UpdateUserLoginLocation implements ShouldQueue
 
         Log::info('Login location update started', ['user_id' => $user->id, 'ip' => $ip]);
 
-        // Skip if IP hasn't changed
         if ($user->ip_address === $ip) {
             Log::info('IP unchanged, skipping update', ['user_id' => $user->id]);
             return;
@@ -26,7 +25,6 @@ class UpdateUserLoginLocation implements ShouldQueue
             $geoData = null;
             $source = null;
 
-            // Try primary API
             try {
                 Log::info('Calling primary API', ['api' => 'geoapi.info']);
                 $response = Http::timeout(5)->get("https://geoapi.info/api/geo?ip={$ip}");
@@ -40,7 +38,6 @@ class UpdateUserLoginLocation implements ShouldQueue
                 Log::warning('Primary API failed', ['error' => $e->getMessage()]);
             }
 
-            // Try fallback API if primary failed
             if (!$geoData) {
                 try {
                     Log::info('Calling fallback API', ['api' => 'ipapi.co']);
@@ -56,7 +53,6 @@ class UpdateUserLoginLocation implements ShouldQueue
                 }
             }
 
-            // Prepare update data
             if (!$geoData) {
                 Log::info('Using default values');
                 $updateData = [
@@ -102,7 +98,6 @@ class UpdateUserLoginLocation implements ShouldQueue
                 ];
             }
 
-            // Update user
             $user->update($updateData);
 
             Log::info('User updated successfully', [
@@ -111,7 +106,6 @@ class UpdateUserLoginLocation implements ShouldQueue
             ]);
         } catch (\Throwable $e) {
             Log::error('Update failed', ['user_id' => $user->id, 'error' => $e->getMessage()]);
-            // Don't throw - just log error for sync execution
         }
     }
 }

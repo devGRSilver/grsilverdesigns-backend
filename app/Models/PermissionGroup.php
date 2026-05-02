@@ -14,10 +14,6 @@ class PermissionGroup extends Model
         'status',
     ];
 
-
-
-
-
     public function permissions(): HasMany
     {
         return $this->hasMany(Permission::class, 'permission_group_id');

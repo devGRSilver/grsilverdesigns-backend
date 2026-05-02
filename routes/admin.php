@@ -23,7 +23,6 @@ use App\Http\Controllers\Admin\{
     StaffController,
     TransactionsController,
     CouponController,
-    // Add these controllers if needed
     ReportController,
 };
 
@@ -129,8 +128,6 @@ Route::prefix('admin')->middleware('auth:admin')->group(function () {
         Route::get('{id}/transactions', [UserController::class, 'getTransactions'])
             ->name('transactions')
             ->middleware('permission:users.view,admin');
-
-
 
         Route::get('{id}', [UserController::class, 'show'])
             ->name('show')

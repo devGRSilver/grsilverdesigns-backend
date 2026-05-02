@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Constants\Constant;
 use App\Models\Category;
 use Exception;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -32,6 +33,44 @@ class CategoriesService
             ->orderBy('name')
             ->get();
     }
+
+
+
+
+    public function getActiveCategories($request)
+    {
+        return Cache::remember(
+            'active_categories_' . md5($request['search'] ?? 'all'),
+            now()->addHours(1),
+            function () use ($request) {
+
+                return Category::query()
+                    ->select('id', 'name', 'slug', 'image', 'banner_image')
+                    ->where('status', Constant::ACTIVE)
+                    ->whereNull('parent_id')
+
+                    ->when($request['search'], function ($query) use ($request) {
+                        $query->where(function ($q) use ($request) {
+                            $q->where('name', 'like', '%' . $request['search'] . '%')
+                                ->orWhereHas('subCategories', function ($sub) use ($request) {
+                                    $sub->where('name', 'like', '%' . $request['search'] . '%');
+                                });
+                        });
+                    })
+
+                    ->with([
+                        'subCategories' => function ($query) {
+                            $query->select('id', 'name', 'slug', 'image', 'banner_image', 'parent_id')
+                                ->where('status', Constant::ACTIVE);
+                        }
+                    ])
+                    ->orderBy('name')
+                    ->get();
+            }
+        );
+    }
+
+
 
 
     public function getActiveSubCategories()

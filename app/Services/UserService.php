@@ -2,10 +2,8 @@
 
 namespace App\Services;
 
-use App\Constants\Constant;
 use App\Enums\OrderStatus;
 use App\Models\Order;
-use App\Models\Product;
 use App\Models\User;
 use Carbon\Carbon;
 use DateTime;
@@ -295,25 +293,21 @@ class UserService
         }
     }
 
-    /**********************************************
-     * UPDATE USER
-     **********************************************/
-    public function updateUserById(int $id, array $validated): User
+    public function updateUserById(int $id, $validated): User
     {
         DB::beginTransaction();
-
         try {
             $user = User::findOrFail($id);
             $user->update($validated);
-
             DB::commit();
-            return $user;
+            return $user->fresh();
         } catch (Exception $e) {
             DB::rollBack();
             Log::error("User update failed. ID {$id}: {$e->getMessage()}");
             throw $e;
         }
     }
+
 
     /**********************************************
      * UPDATE PASSWORD
@@ -380,6 +374,39 @@ class UserService
         } catch (Exception $e) {
             DB::rollBack();
             Log::error("User delete failed. ID {$id}: {$e->getMessage()}");
+            throw $e;
+        }
+    }
+
+
+
+    /**********************************************
+     * DETAILS USER
+     **********************************************/
+    public function getUserDetails($id): User
+    {
+        try {
+            $user = User::select([
+                'id',
+                'name',
+                'phonecode',
+                'phone',
+                'email',
+                'password',
+                'phone_verified_at',
+                'email_verified_at',
+                'profile_picture',
+                'status',
+                'profile_complete',
+                'country',
+                'country_name',
+                'city',
+                'currency',
+            ])->findOrFail($id);
+
+            return $user;
+        } catch (Exception $e) {
+            Log::error("Fetching user failed: {$e->getMessage()}");
             throw $e;
         }
     }

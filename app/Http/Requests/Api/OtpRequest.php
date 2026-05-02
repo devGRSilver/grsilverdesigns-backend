@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class OtpRequest extends FormRequest
 {
@@ -13,18 +14,30 @@ class OtpRequest extends FormRequest
 
     public function rules(): array
     {
-        return [
+        $rules = [
             'phonecode' => [
                 'required',
                 'string',
-                'regex:/^[1-9]\d{0,3}$/', // 1–4 digits, cannot start with 0
+                'regex:/^[1-9]\d{0,3}$/',
             ],
+
+            'type' => [
+                'required',
+                'in:login,forget_password',
+            ],
+
             'phone' => [
                 'required',
                 'string',
-                'regex:/^[0-9]{6,15}$/', // 6–15 digits only
+                'regex:/^[0-9]{6,15}$/',
             ],
         ];
+
+        if ($this->type === 'forget_password') {
+            $rules['phone'][] = Rule::exists('users', 'phone');
+        }
+
+        return $rules;
     }
 
     public function messages(): array
@@ -32,26 +45,27 @@ class OtpRequest extends FormRequest
         return [
             'phonecode.required' => 'Phone code is required.',
             'phonecode.regex' => 'Invalid phone code format. Example: 91',
+
+            'type.required' => 'Type is required.',
+            'type.in' => 'Type must be login or forget_password.',
+
             'phone.required' => 'Phone number is required.',
             'phone.regex' => 'Invalid phone number. It must contain 6–15 digits only.',
+            'phone.exists' => 'Phone number does not exist in our records.',
         ];
     }
 
     protected function prepareForValidation(): void
     {
-        // Normalize phone - remove all non-digit characters
         if ($this->filled('phone')) {
             $this->merge([
                 'phone' => preg_replace('/\D/', '', trim($this->phone)),
             ]);
         }
 
-        // Normalize phonecode - remove + and any non-digit characters
         if ($this->filled('phonecode')) {
-            $phonecode = preg_replace('/\D/', '', trim($this->phonecode));
-
             $this->merge([
-                'phonecode' => $phonecode,
+                'phonecode' => preg_replace('/\D/', '', trim($this->phonecode)),
             ]);
         }
     }

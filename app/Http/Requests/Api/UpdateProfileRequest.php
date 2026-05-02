@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateProfileRequest extends FormRequest
 {
@@ -21,11 +22,20 @@ class UpdateProfileRequest extends FormRequest
                 'max:100',
                 'regex:/^[a-zA-Z\s]+$/',
             ],
-            'timezone' => [
+
+            'email' => [
                 'sometimes',
                 'required',
-                'string',
-                'timezone:all',
+                'email',
+                'max:255',
+                Rule::unique('users', 'email')->ignore($this->user()->id),
+            ],
+
+            'profile_picture' => [
+                'sometimes',
+                'image',              // Must be an image
+                'mimes:jpeg,png,jpg', // Allowed formats
+                'max:2048',           // Max size 2MB (2048 KB)
             ],
         ];
     }
@@ -36,8 +46,17 @@ class UpdateProfileRequest extends FormRequest
             'name.required' => 'Name is required.',
             'name.max' => 'Name cannot exceed 100 characters.',
             'name.regex' => 'Name can only contain letters and spaces.',
+
+            'email.required' => 'Email is required.',
+            'email.email' => 'Invalid email format.',
+            'email.unique' => 'Email already exists.',
+
             'timezone.required' => 'Timezone is required.',
             'timezone.timezone' => 'Invalid timezone.',
+
+            'profile_picture.image' => 'Profile picture must be an image.',
+            'profile_picture.mimes' => 'Profile picture must be a file of type: jpeg, png, jpg.',
+            'profile_picture.max' => 'Profile picture must not exceed 2MB.',
         ];
     }
 }

@@ -9,7 +9,6 @@ use App\Models\User;
 use App\Services\AuthService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
@@ -53,8 +52,7 @@ class AuthController extends ResponseController
 
             return $this->errorResponse(
                 message: 'Failed to send OTP. Please try again.',
-                statusCode: Response::HTTP_INTERNAL_SERVER_ERROR,
-                errors: ['general' => ['An error occurred while sending OTP']]
+                statusCode: Response::HTTP_INTERNAL_SERVER_ERROR
             );
         }
     }
@@ -70,6 +68,16 @@ class AuthController extends ResponseController
                 $request->ip(),
                 $request->userAgent()
             );
+
+            if (isset($result['forget_password'])) {
+                return $this->successResponse(
+                    data: $result,
+                    message: $result['message'] ?? 'OTP verified successfully',
+                    statusCode: Response::HTTP_OK
+                );
+            }
+
+
 
             Log::info('OTP verified successfully', [
                 'user_id' => $result['user']['id'] ?? null,
@@ -99,7 +107,6 @@ class AuthController extends ResponseController
             return $this->errorResponse(
                 message: 'Verification failed',
                 statusCode: Response::HTTP_UNPROCESSABLE_ENTITY,
-                errors: $e->errors()
             );
         } catch (\Exception $e) {
             Log::error('Failed to verify OTP', [
@@ -111,7 +118,6 @@ class AuthController extends ResponseController
             return $this->errorResponse(
                 message: 'OTP verification failed',
                 statusCode: Response::HTTP_UNPROCESSABLE_ENTITY,
-                errors: ['otp' => [$e->getMessage()]]
             );
         }
     }
@@ -143,7 +149,6 @@ class AuthController extends ResponseController
             return $this->errorResponse(
                 message: $e->getMessage(),
                 statusCode: Response::HTTP_UNPROCESSABLE_ENTITY,
-                errors: $e->errors()
             );
         } catch (\Exception $e) {
             Log::error('Failed to resend OTP', [
@@ -155,33 +160,29 @@ class AuthController extends ResponseController
             return $this->errorResponse(
                 message: 'Failed to resend OTP',
                 statusCode: Response::HTTP_UNPROCESSABLE_ENTITY,
-                errors: ['token' => [$e->getMessage()]]
             );
         }
     }
 
     /**
-     * Logout user and revoke current token
+     * Logout user and revoke current token (Sanctum)
      */
     public function logout(Request $request): JsonResponse
     {
+        $user = $request->user();
+
         try {
-            $user = $request->user();
 
             if (!$user) {
                 return $this->errorResponse(
-                    message: 'Unauthenticated',
+                    message: 'Unauthenticated.',
                     statusCode: Response::HTTP_UNAUTHORIZED
                 );
             }
 
-            // Delete current access token
-            $request->user()->currentAccessToken()->delete();
+            // Revoke only the current token
+            $request->user()->tokens()->delete();
 
-            Log::info('User logged out successfully', [
-                'user_id' => $user->id,
-                'ip' => $request->ip()
-            ]);
 
             return $this->successResponse(
                 data: [],
@@ -189,113 +190,22 @@ class AuthController extends ResponseController
                 redirect_url: null,
                 statusCode: Response::HTTP_OK
             );
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Logout failed', [
-                'error' => $e->getMessage(),
-                'user_id' => $request->user()->id ?? null,
-                'ip' => $request->ip()
+                'error'   => $e->getMessage(),
+                'user_id' => $user?->id,
+                'ip'      => $request->ip()
             ]);
 
             return $this->errorResponse(
                 message: 'Logout failed',
                 statusCode: Response::HTTP_INTERNAL_SERVER_ERROR,
-                errors: ['general' => ['An error occurred during logout']]
             );
         }
     }
 
-    /**
-     * Get authenticated user profile
-     */
-    public function profile(Request $request): JsonResponse
-    {
-        try {
-            $user = $request->user();
 
-            if (!$user) {
-                return $this->errorResponse(
-                    message: 'Unauthenticated',
-                    statusCode: Response::HTTP_UNAUTHORIZED
-                );
-            }
 
-            return $this->successResponse(
-                data: $user->only([
-                    'id',
-                    'name',
-                    'phone',
-                    'phonecode',
-                    'timezone',
-                    'status',
-                    'phone_verified_at',
-                    'last_login_at',
-                    'created_at'
-                ]),
-                message: 'Profile retrieved successfully',
-                redirect_url: null,
-                statusCode: Response::HTTP_OK
-            );
-        } catch (\Exception $e) {
-            Log::error('Failed to retrieve profile', [
-                'error' => $e->getMessage(),
-                'user_id' => $request->user()->id ?? null
-            ]);
-
-            return $this->errorResponse(
-                message: 'Failed to retrieve profile',
-                statusCode: Response::HTTP_INTERNAL_SERVER_ERROR
-            );
-        }
-    }
-
-    /**
-     * Update user profile
-     */
-    public function updateProfile(UpdateProfileRequest $request): JsonResponse
-    {
-        try {
-            $user = $this->authService->updateProfile(
-                $request->user(),
-                $request->validated()
-            );
-
-            Log::info('Profile updated successfully', [
-                'user_id' => $user->id,
-                'updated_fields' => array_keys($request->validated())
-            ]);
-
-            return $this->successResponse(
-                data: $user->only([
-                    'id',
-                    'name',
-                    'phone',
-                    'phonecode',
-                    'timezone',
-                    'status'
-                ]),
-                message: 'Profile updated successfully',
-                redirect_url: null,
-                statusCode: Response::HTTP_OK
-            );
-        } catch (ValidationException $e) {
-            return $this->errorResponse(
-                message: 'Validation failed',
-                statusCode: Response::HTTP_UNPROCESSABLE_ENTITY,
-                errors: $e->errors()
-            );
-        } catch (\Exception $e) {
-            Log::error('Failed to update profile', [
-                'error' => $e->getMessage(),
-                'user_id' => $request->user()->id ?? null
-            ]);
-
-            return $this->errorResponse(
-                message: 'Failed to update profile',
-                statusCode: Response::HTTP_INTERNAL_SERVER_ERROR,
-                errors: ['general' => ['An error occurred while updating profile']]
-            );
-        }
-    }
 
     /**
      * Refresh access token
@@ -346,54 +256,11 @@ class AuthController extends ResponseController
             return $this->errorResponse(
                 message: 'Failed to refresh token',
                 statusCode: Response::HTTP_INTERNAL_SERVER_ERROR,
-                errors: ['general' => ['An error occurred while refreshing token']]
             );
         }
     }
 
-    /**
-     * Revoke all user tokens (logout from all devices)
-     */
-    public function revokeAllTokens(Request $request): JsonResponse
-    {
-        try {
-            $user = $request->user();
 
-            if (!$user) {
-                return $this->errorResponse(
-                    message: 'Unauthenticated',
-                    statusCode: Response::HTTP_UNAUTHORIZED
-                );
-            }
-
-            $tokenCount = $user->tokens()->count();
-            $user->tokens()->delete();
-
-            Log::warning('All tokens revoked', [
-                'user_id' => $user->id,
-                'token_count' => $tokenCount,
-                'ip' => $request->ip()
-            ]);
-
-            return $this->successResponse(
-                data: ['revoked_tokens' => $tokenCount],
-                message: 'All tokens revoked successfully',
-                redirect_url: null,
-                statusCode: Response::HTTP_OK
-            );
-        } catch (\Exception $e) {
-            Log::error('Failed to revoke tokens', [
-                'error' => $e->getMessage(),
-                'user_id' => $request->user()->id ?? null
-            ]);
-
-            return $this->errorResponse(
-                message: 'Failed to revoke tokens',
-                statusCode: Response::HTTP_INTERNAL_SERVER_ERROR,
-                errors: ['general' => ['An error occurred while revoking tokens']]
-            );
-        }
-    }
 
     /**
      * Mask phone number for security
@@ -406,4 +273,47 @@ class AuthController extends ResponseController
 
         return substr($phone, 0, 3) . str_repeat('*', strlen($phone) - 6) . substr($phone, -3);
     }
+
+
+
+
+
+    /**
+     * Send OTP to phone number
+     */
+    // public function resetPassword(OtpRequest $request): JsonResponse
+    // {
+    //     try {
+    //         $result = $this->authService->sendOtp($request->validated());
+    //         Log::info('OTP sent successfully', [
+    //             'phone_masked' => $this->maskPhone($request->input('phonecode') . $request->input('phone')),
+    //             'type' => $request->input('type', 'forget_password'),
+    //             'ip' => $request->ip()
+    //         ]);
+
+    //         return $this->successResponse(
+    //             data: [
+    //                 'token' => $result['token'],
+    //                 'expires_in' => $result['expires_in'],
+    //                 'can_resend_in' => $result['can_resend_in'] ?? 60
+    //             ],
+    //             message: 'OTP sent successfully to your phone number',
+    //             redirect_url: null,
+    //             statusCode: Response::HTTP_OK
+    //         );
+    //     } catch (\Exception $e) {
+    //         Log::error('Failed to send OTP', [
+    //             'error' => $e->getMessage(),
+    //             'phone_masked' => $this->maskPhone($request->input('phonecode') . $request->input('phone')),
+    //             'ip' => $request->ip(),
+    //             'trace' => $e->getTraceAsString()
+    //         ]);
+
+    //         return $this->errorResponse(
+    //             message: 'Failed to send OTP. Please try again.',
+    //             statusCode: Response::HTTP_INTERNAL_SERVER_ERROR,
+    //             errors: ['general' => ['An error occurred while sending OTP']]
+    //         );
+    //     }
+    // }
 }

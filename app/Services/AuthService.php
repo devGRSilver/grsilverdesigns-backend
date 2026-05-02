@@ -47,6 +47,18 @@ class AuthService
         $otpData = $this->validateOtp($data, $ip);
         $phone = $this->formatPhone($otpData['phonecode'], $otpData['phone']);
 
+
+
+        $check =  Otp::where(['token' => $data['token'], 'type' => 'forget_password'])->first();
+        if (isset($check) && $check->type == 'forget_password') {
+            return [
+                'forget_password' => true,
+                'message' => 'OTP has been verified.',
+                'forget_password_token' => $check->token,
+            ];
+        }
+
+
         return DB::transaction(function () use ($otpData, $phone, $ip, $userAgent) {
             $user = User::where('phone', $otpData['phone'])
                 ->lockForUpdate()

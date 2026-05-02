@@ -1,69 +1,48 @@
 <?php
 
-use App\Http\Controllers\Admin\AuthController;
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\CategoriesController;
+use App\Http\Controllers\Api\ContentController;
 use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
 
-
 /*
-    |--------------------------------------------------------------------------
-    | Public Routes
-    |--------------------------------------------------------------------------
-    */
+|--------------------------------------------------------------------------
+| Public Routes
+|--------------------------------------------------------------------------
+*/
 
 Route::prefix('otp')->group(function () {
-
-    Route::post('send', [AuthController::class, 'send'])
-        ->middleware('throttle:5,1');
-
-    Route::post('verify', [AuthController::class, 'verify'])
-        ->middleware('throttle:10,1');
-
-    Route::post('resend', [AuthController::class, 'resend'])
-        ->middleware()->middleware(['auth:sanctum']);
+    Route::post('send', [AuthController::class, 'sendOtp'])->middleware('throttle:5,1');
+    Route::post('verify', [AuthController::class, 'verifyOtp'])->middleware('throttle:10,1');
+    Route::post('resend', [AuthController::class, 'resendOtp'])->middleware('throttle:5,1');
 });
 
 
 
-
 /*
-    |--------------------------------------------------------------------------
-    | Protected Routes (Requires Authentication)
-    |--------------------------------------------------------------------------
-    */
+|--------------------------------------------------------------------------
+| Protected Routes
+|--------------------------------------------------------------------------
+*/
 
-Route::middleware(['auth:sanctum'])->group(function () {
+Route::middleware('auth:sanctum')->group(function () {
 
-    Route::post('logout', [AuthController::class, 'logout'])
-        ->middleware(['auth:sanctum', 'throttle:3,1']);
+    Route::post('logout', [AuthController::class, 'logout'])->middleware('throttle:3,1');
+
+    Route::post('tokens/refresh', [AuthController::class, 'refreshToken'])
+        ->middleware('throttle:10,1');
+
+    Route::get('profile', [UserController::class, 'getUserDetails'])
+        ->middleware('throttle:60,1');
+
+    Route::patch('profile', [UserController::class, 'updateProfile'])
+        ->middleware('throttle:20,1');
 
 
-    Route::prefix('tokens')->group(function () {
-
-        Route::post('refresh', [AuthController::class, 'refresh'])
-            ->middleware('throttle:10,1');
-
-        Route::delete('', [AuthController::class, 'revokeAll'])
-            ->middleware('throttle:5,1');
-
-        Route::delete('{tokenId}', [AuthController::class, 'revoke'])
-            ->middleware('throttle:20,1');
-    });
+    Route::get('categories', [CategoriesController::class, 'categories']);
 
 
 
-
-    // User Management
-    Route::prefix('profile')->group(function () {
-
-        // Profile
-        Route::get('', [UserController::class, 'show'])
-            ->middleware('throttle:60,1');
-
-        Route::put('', [UserController::class, 'update'])
-            ->middleware('throttle:20,1');
-
-        Route::patch('', [UserController::class, 'partialUpdate'])
-            ->middleware('throttle:20,1');
-    });
+    Route::get('contents', [ContentController::class, 'getContent']);
 });

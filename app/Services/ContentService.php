@@ -132,6 +132,14 @@ class ContentService
     /**********************************************
      * Find Content
      **********************************************/
+    public function getContent($slug): Content
+    {
+        return Content::where('slug', $slug)->select('id', 'title', 'slug', 'description', 'image', 'meta_title', 'meta_keywords', 'meta_description')->firstOrFail();
+    }
+
+
+
+
     public function findById(int $id): Content
     {
         return Content::findOrFail($id);
